@@ -2,7 +2,7 @@ import Duck from './Duck'
 import { useEffect, useRef } from 'react'
 import { animate, useInView } from 'motion/react'
 import contributions from '../contributions.json'
-import workCalendar from '../contributions-work.json'
+import { workDays } from '../lib/workDays'
 import { repoDays } from '../data'
 import { THEMES } from '../lib/theme'
 
@@ -11,7 +11,7 @@ const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'e
 
 const allDays = [
   ...contributions.accounts.flatMap((a) => Object.entries(a.days)),
-  ...Object.entries(workCalendar.days),
+  ...Object.entries(workDays),
 ]
 const totalContributions = allDays.reduce((sum, [, n]) => sum + n, 0)
 const byYear = allDays.reduce((acc, [date, n]) => {

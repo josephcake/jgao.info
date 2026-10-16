@@ -2,7 +2,7 @@ import Duck from './Duck'
 import { useMemo, useRef, useState } from 'react'
 import { motion, useInView } from 'motion/react'
 import data from '../contributions.json'
-import workCalendar from '../contributions-work.json'
+import { ESTIMATED_AFTER, workDays } from '../lib/workDays'
 
 const CELL = 9
 const GAP = 2
@@ -13,10 +13,11 @@ const WEEKS = 54
 const RIGHT = 46
 const MIN_TOTAL = 20
 const DAY = 86400000
+const LAST_YEAR = Math.max(data.lastYear, new Date().getUTCFullYear())
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const PERSONAL = data.accounts[0]
 const WORK = { ...data.accounts[1], days: { ...data.accounts[1].days } }
-for (const [date, count] of Object.entries(workCalendar.days)) {
+for (const [date, count] of Object.entries(workDays)) {
   WORK.days[date] = Math.max(WORK.days[date] || 0, count)
 }
 
@@ -54,7 +55,7 @@ const plural = (n, word) => `${n.toLocaleString()} ${word}${n === 1 ? '' : 's'}`
 
 function buildRows() {
   const rows = []
-  for (let year = data.firstYear; year <= data.lastYear; year++) {
+  for (let year = data.firstYear; year <= LAST_YEAR; year++) {
     rows.push({ year, personal: new Array(WEEKS).fill(0), work: new Array(WEEKS).fill(0) })
   }
   const fill = (account, key) => {
@@ -286,8 +287,8 @@ export default function GitHubActivity() {
           <Duck spot="calendar" />
         </div>
         <p className={`github__note ${mode === PERSONAL.handle ? 'is-off' : ''}`}>
-          Work activity comes from my private calendar. Yearly totals are exact; daily counts are
-          estimated.
+          Work activity comes from my private calendar through {formatDate(Date.parse(`${ESTIMATED_AFTER}T00:00:00Z`))}.
+          Daily counts are estimated, and later days follow my usual pace.
         </p>
       </figure>
     </section>
