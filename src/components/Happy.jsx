@@ -5,7 +5,6 @@ const DOG_W = 132
 const SCALE = DOG_W / 122
 const WALK = 46
 const TROT = 110
-const RUN = 180
 const GALLOP = 250
 const ZOOM = 330
 const CRITTER_SPEED = 240

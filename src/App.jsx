@@ -95,7 +95,7 @@ export default function App() {
         id: 'demo-gis',
         group: 'Try',
         label: 'Crawl and search GIS services',
-        keywords: 'geospatial arcgis catalog crawler redis search layers',
+        keywords: 'geospatial arcgis catalog crawler redis search layers patent',
         run: () => {
           window.dispatchEvent(new CustomEvent('lab:open', { detail: 'gis' }))
           setTimeout(() => scrollToId('gis', 'center'), 120)
@@ -126,6 +126,7 @@ export default function App() {
         id: `theme-${t.id}`,
         group: 'Theme',
         label: `Switch to ${t.name}`,
+        swatch: t.id,
         hint: theme === t.id ? 'Current' : undefined,
         keywords: 'theme color dark light tennis roland garros wimbledon',
         run: () => changeTheme(t.id),

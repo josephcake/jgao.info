@@ -78,13 +78,13 @@ export const chapters = [
     ],
     points: [
       '3D map visualization that shows a caller’s floor, not just their address',
-      'Indoor navigation that guides responders through buildings',
+      'Indoor navigation that guides responders through buildings, now patented',
       'Reusable map components on Google Maps and ArcGIS',
       'Unified search across internal and worldwide sources',
-      'A crawler that catalogs GIS services into Redis',
+      'A patented crawler that catalogs GIS services into Redis',
     ],
     demo: 'dispatch',
-    tags: ['React', 'TypeScript', 'Google Maps', 'ArcGIS', '3D', 'Indoor maps', 'Redis'],
+    tags: ['React', 'TypeScript', 'Google Maps', 'ArcGIS', '3D', 'Indoor maps', 'Redis', 'Patents'],
   },
   {
     id: 'founder',
@@ -138,7 +138,7 @@ export const projects = [
     kind: 'Geospatial',
     summary: 'Crawling and cataloging map services so applications can find them.',
     detail:
-      'Finds GIS services across sources, normalizes their metadata, and stores it in Redis.',
+      'Finds GIS services across sources, normalizes their metadata, and stores it in Redis. The crawler behind it is patented.',
     demo: 'gis',
   },
 ]

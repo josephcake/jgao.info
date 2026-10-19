@@ -9,9 +9,11 @@ const NAME = ['Joseph', 'Gao']
 const ease = [0.22, 1, 0.36, 1]
 const ACTS = [
   { at: [0.12, 0.16, 0.28, 0.31], title: 'It started on a tennis court.' },
-  { at: [0.36, 0.4, 0.52, 0.55], title: 'Then I built maps for 9-1-1.' },
-  { at: [0.62, 0.66, 0.74, 0.77], title: 'Down to the caller’s floor.' },
-  { at: [0.8, 0.83, 0.93, 0.96], title: 'After hours, I wire sensors.' },
+  { at: [0.36, 0.4, 0.5, 0.53], title: 'Then I built maps for 9-1-1.' },
+  { at: [0.53, 0.56, 0.62, 0.65], title: 'Street by street, to the door.' },
+  { at: [0.65, 0.68, 0.75, 0.78], title: 'Inside, every exit and stairwell.' },
+  { at: [0.78, 0.81, 0.9, 0.93], title: 'Up to the caller’s floor.' },
+  { at: [0.94, 0.97, 1.07, 1.1], title: 'After hours, I wire sensors.' },
 ]
 
 function Act({ progress, at: [a, b, c, d], title }) {

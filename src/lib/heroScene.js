@@ -1,6 +1,7 @@
 // The hero fly-through. One camera moves over the same ground plane as the contour field: a tennis
-// court that opens out into Central Park, the Manhattan grid around it, the blocks rising into 3D,
-// then into the caller's floor, where a radar tracks the people on it.
+// court that opens out into Central Park, then a chase camera behind a response unit driving the
+// grid to the caller's tower, through its ground floor and up the stairs to the caller's floor,
+// where a radar tracks the people on it.
 // Scene positions are local units on Manhattan's grid, rotated 29° onto the screen the way the real
 // grid sits. Inside the tower one unit is about half a metre.
 
@@ -22,6 +23,10 @@ const DEPTH = STREET - 8
 const ZF = (TOWER.height * (TOWER.floor - 1)) / TOWER.floors
 const WALL = 2.4
 
+// Two stairwells either side of the lift core run the full height, each entered from the north
+const STAIRS = [[9, 11, 14, 17], [26, 11, 31, 17]]
+const stairWalls = ([x0, y0, x1, y1]) => [[x0, y0, x0 + 1, y0], [x0 + 3.5, y0, x1, y0], [x1, y0, x1, y1], [x1, y1, x0, y1], [x0, y1, x0, y0]]
+
 // Floor 23 in floor units: x runs along the avenue-to-avenue side, y from the north wall (0) to the
 // south wall (28), where the sensor is mounted.
 const WALLS = [
@@ -29,7 +34,32 @@ const WALLS = [
   [10, 0, 10, 7], [20, 0, 20, 7], [30, 0, 30, 7],
   [0, 7, 3, 7], [6, 7, 13, 7], [16, 7, 23, 7], [26, 7, 33, 7], [36, 7, 40, 7],
   [0, 20, 10, 20], [13, 20, 13, 28],
+  ...STAIRS.flatMap(stairWalls),
 ]
+
+// The ground floor, as indoor navigation reads it: the street door and two fire exits, the stairs,
+// and the rooms everyone shares
+const GROUND_WALLS = [
+  [0, 0, 17, 0], [23, 0, 40, 0], [40, 0, 40, 28], [40, 28, 21, 28], [18, 28, 0, 28], [0, 28, 0, 23], [0, 20, 0, 0],
+  [10, 0, 10, 8], [0, 8, 6, 8],
+  [28, 19, 40, 19], [28, 22, 28, 28],
+  ...STAIRS.flatMap(stairWalls),
+]
+// The street door is only marked, not arrowed or named: the response car parks right in front of it
+const EXITS = [
+  { at: [20, 0], out: [0, -1], span: 6 },
+  { at: [0, 21.5], out: [-1, 0], span: 3, name: 'Exit' },
+  { at: [19.5, 28], out: [0, 1], span: 3, name: 'Exit' },
+]
+const ROOMS = [
+  { b: [11, 0, 29, 10], name: 'Lobby' },
+  { b: [28, 19, 40, 28], name: 'Lounge' },
+  { b: [0, 0, 10, 8], name: 'Mail room' },
+]
+// From the curb, through the lobby to Stair A, up it, then across Floor 23 to the caller
+const UP = [11.25, 14]
+const LOBBY_ROUTE = [[20, -4], [20, 7], [UP[0], 7], UP]
+const FLOOR_ROUTE = [UP, [UP[0], 9], [34.5, 9], [34.5, 7.4]]
 const DESKS = [[2, 2, 7, 4.5], [12, 2, 18, 4.5], [22, 2, 28, 4.5], [32, 2, 38, 4.5], [3, 23, 10, 26], [27, 21, 31, 23], [34, 21, 38, 23], [27, 25, 31, 27], [34, 25, 38, 27]]
 const CORE = [16, 11, 24, 17]
 const SENSOR = { x: 20, y: 27.6, z: 4, range: 34, half: (62 * Math.PI) / 180 }
@@ -45,7 +75,7 @@ const LINES = [
 export const PITCH_MAX = 0.98
 // Story time runs past 1: a unit is the scroll the first acts were paced on, so lengthening the
 // sensor act lengthens the hero instead of rushing everything before it.
-export const STORY_END = 1.1
+export const STORY_END = 1.24
 
 const clamp01 = (v) => Math.min(1, Math.max(0, v))
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
@@ -92,6 +122,51 @@ for (let i = 0; i < 2400; i++) {
   TREES.push([u, v, 0.9 + hash(i, 23) * 1.4])
 }
 const DRIVE = [[-92, 422], [-92, -400], [-70, -422], [70, -422], [92, -400], [92, 400], [70, 422], [-70, 422]]
+
+// The response unit's route: up the avenue, across the park on the 79th Street transverse, up Fifth,
+// and along the street to the tower's door
+const ROUTE = [[AVENUES[2], 12 * STREET], [AVENUES[2], CROSSING], [AVENUES[6], CROSSING], [AVENUES[6], -2 * STREET], [T0.u + 20, -2 * STREET]]
+const SPANS = ROUTE.slice(1).map((q, i) => Math.hypot(q[0] - ROUTE[i][0], q[1] - ROUTE[i][1]))
+const ROUTE_LENGTH = SPANS.reduce((a, b) => a + b, 0)
+const along = (s) => {
+  let left = clamp(s, 0, ROUTE_LENGTH)
+  for (let i = 0; i < SPANS.length; i++) {
+    if (left <= SPANS[i] || i === SPANS.length - 1) {
+      const k = Math.min(1, left / SPANS[i])
+      return [lerp(ROUTE[i][0], ROUTE[i + 1][0], k), lerp(ROUTE[i][1], ROUTE[i + 1][1], k)]
+    }
+    left -= SPANS[i]
+  }
+  return ROUTE[ROUTE.length - 1]
+}
+// Direction of travel, averaged over a stretch of road so the camera swings round corners
+const heading = (s, reach) => {
+  const a = along(s - reach)
+  const b = along(s + reach)
+  return Math.atan2(b[1] - a[1], b[0] - a[0])
+}
+const driven = (p) => ROUTE_LENGTH * smooth(0.47, 0.63, p)
+const distToRoute = (u, v) => {
+  let best = Infinity
+  for (let i = 0; i < SPANS.length; i++) {
+    const [u0, v0] = ROUTE[i]
+    const [u1, v1] = ROUTE[i + 1]
+    const k = clamp(((u - u0) * (u1 - u0) + (v - v0) * (v1 - v0)) / (SPANS[i] * SPANS[i]), 0, 1)
+    best = Math.min(best, Math.hypot(u - lerp(u0, u1, k), v - lerp(v0, v1, k)))
+  }
+  return best
+}
+const trim = (pts, k) => {
+  const lens = pts.slice(1).map((q, i) => Math.hypot(q[0] - pts[i][0], q[1] - pts[i][1]))
+  let left = k * lens.reduce((a, b) => a + b, 0)
+  const out = [pts[0]]
+  for (let i = 0; i < lens.length && left > 0; i++) {
+    const f = Math.min(1, left / lens[i])
+    out.push([lerp(pts[i][0], pts[i + 1][0], f), lerp(pts[i][1], pts[i + 1][1], f)])
+    left -= lens[i]
+  }
+  return out
+}
 
 // Monotone cubic through the keys, so the camera never overshoots a key and never stops dead between
 // two keys that are heading the same way.
@@ -199,6 +274,15 @@ export function createScene() {
 
   const world = (u, v) => [pc[0] + (u * CA - v * SA) * U, pc[1] + (u * SA + v * CA) * U]
 
+  // Third person behind the unit: low over the street, looking down the road ahead of it
+  let chase = { zoom: 1, pitch: 0.9, lead: 26 }
+  const chaseView = (p) => {
+    const s = driven(p)
+    const phi = heading(s + chase.lead * 0.5, 34)
+    return { zoom: Math.log(chase.zoom), pitch: chase.pitch, yaw: -Math.PI / 2 - phi - ANG, focus: world(...along(s + chase.lead)) }
+  }
+  const chaseWeight = (p) => smooth(0.44, 0.5, p) * (1 - smooth(0.61, 0.67, p))
+
   // box is where the act captions sit, so the scene can frame itself in the space that is left.
   const resize = (width, height, box, dpr = 1) => {
     W = width
@@ -217,19 +301,29 @@ export function createScene() {
     const courtPitch = wide ? [0.9, 0.96] : [0.78, 0.84]
     const sideline = -ANG + Math.PI / 2
     const park = world(0, 60)
-    const towerAt = world(tu, tv)
+    const lobbyAt = world(...local(20, 11))
+    const stairAt = world(...local(...UP))
     const floorAt = world(...local(TOWER.width / 2, DEPTH / 2 + 3))
     const look = wide ? [0.8, 0.78] : [0.6, 0.58]
     const z = Math.log
     const E = STORY_END
+    const TAU = Math.PI * 2
+    chase = { zoom: (wide ? 5 : 3.6) / U, pitch: wide ? 0.95 : 0.9, lead: wide ? 26 : 22 }
+    const c0 = chaseView(0.5)
+    const c1 = chaseView(0.61)
+    const lobby = inside * (wide ? 0.62 : 0.78)
+    // The camera climbs the stairwell with the route, turning half a circle so it arrives facing the
+    // sensor. Every later key carries that turn, so the story ends a full turn round, which is the
+    // same view as the page below it.
+    const spin = -TAU
     keys = {
-      zoom: spline([[0, 0], [0.13, z(courtZoom)], [0.31, z(courtZoom * 1.03)], [0.4, z(0.46)], [0.55, z(0.5)], [0.66, z(1.12)], [0.74, z(1.22)], [0.84, z(inside)], [0.95, z(inside * 1.05)], [1, z(inside * 0.94)], [E, 0]]),
-      pitch: spline([[0, 0], [0.03, 0], [0.13, courtPitch[0]], [0.31, courtPitch[1]], [0.4, 0], [0.55, 0], [0.66, PITCH_MAX], [0.74, PITCH_MAX * 0.97], [0.84, look[0]], [0.95, look[1]], [1, look[1] * 0.85], [E, 0]]),
-      yaw: spline([[0, 0], [0.03, 0], [0.13, sideline - 0.2], [0.31, sideline - 0.11], [0.4, -ANG], [0.55, -ANG], [0.66, -ANG + 0.08], [0.74, -ANG + 0.16], [0.84, -ANG + 0.24], [0.95, -ANG + 0.3], [1, -ANG + 0.33], [E, 0]]),
-      focus: spline([[0, home], [0.13, world(2, COURT.v - 8)], [0.31, world(2, COURT.v + 9)], [0.4, park], [0.55, park], [0.66, towerAt], [0.74, towerAt], [0.84, floorAt], [1.05, floorAt], [E, home]]),
-      fz: spline([[0, 0], [0.56, 0], [0.66, ZF * 0.7], [0.74, ZF * 0.85], [0.84, ZF + 1], [1, ZF + 1], [E, 0]]),
-      contour: spline([[0, 1], [0.12, 0.5], [0.25, 0.5], [0.28, 0.85], [0.32, 0.85], [0.4, 0.22], [0.55, 0.22], [0.66, 0.4], [0.76, 0.4], [0.84, 0.12], [0.94, 0.12], [0.99, 0.8], [E, 1]]),
-      frame: spline([[0, 0], [0.12, 1], [1, 1], [E, 0]]),
+      zoom: spline([[0, 0], [0.13, z(courtZoom)], [0.31, z(courtZoom * 1.03)], [0.4, z(0.46)], [0.44, z(0.5)], [0.5, c0.zoom], [0.61, c1.zoom], [0.68, z(lobby)], [0.76, z(lobby * 1.06)], [0.8, z(inside * 0.5)], [0.86, z(inside * 0.5)], [0.9, z(inside * 0.58)], [0.98, z(inside)], [1.09, z(inside * 1.05)], [1.14, z(inside * 0.94)], [E, 0]]),
+      pitch: spline([[0, 0], [0.03, 0], [0.13, courtPitch[0]], [0.31, courtPitch[1]], [0.4, 0], [0.44, 0], [0.5, c0.pitch], [0.61, c1.pitch], [0.68, wide ? 0.8 : 0.72], [0.76, wide ? 0.8 : 0.72], [0.82, 0.62], [0.88, 0.66], [0.98, look[0]], [1.09, look[1]], [1.14, look[1] * 0.85], [E, 0]]),
+      yaw: spline([[0, 0], [0.03, 0], [0.13, sideline - 0.2], [0.31, sideline - 0.11], [0.4, -ANG], [0.44, -ANG], [0.5, c0.yaw], [0.61, c1.yaw], [0.68, -ANG - Math.PI], [0.77, -ANG - Math.PI], [0.92, -ANG + 0.18 + spin], [0.98, -ANG + 0.24 + spin], [1.09, -ANG + 0.3 + spin], [1.14, -ANG + 0.33 + spin], [E, spin]]),
+      focus: spline([[0, home], [0.13, world(2, COURT.v - 8)], [0.31, world(2, COURT.v + 9)], [0.4, park], [0.44, park], [0.5, c0.focus], [0.61, c1.focus], [0.68, lobbyAt], [0.76, lobbyAt], [0.8, stairAt], [0.88, stairAt], [0.98, floorAt], [1.19, floorAt], [E, home]]),
+      fz: spline([[0, 0], [0.78, 0], [0.88, ZF + 1], [1.14, ZF + 1], [E, 0]]),
+      contour: spline([[0, 1], [0.12, 0.5], [0.25, 0.5], [0.28, 0.85], [0.32, 0.85], [0.4, 0.22], [0.62, 0.22], [0.7, 0.32], [0.86, 0.4], [0.9, 0.95], [0.95, 0.35], [0.98, 0.12], [1.08, 0.12], [1.13, 0.8], [E, 1]]),
+      frame: spline([[0, 0], [0.12, 1], [1.14, 1], [E, 0]]),
     }
 
     footprints = []
@@ -246,12 +340,14 @@ export function createScene() {
           const own = { ...b, u1: b.u0 + TOWER.width }
           const annex = { ...b, u0: b.u0 + TOWER.width + 4 }
           footprints.push(own, annex)
-          blocks.push({ ...own, own: true, h: TOWER.height, delay: 0 }, { ...annex, h: 46, delay: 0.05 })
+          blocks.push({ ...own, own: true, h: TOWER.height, delay: 0.5 }, { ...annex, h: 46, delay: 0.5 })
           continue
         }
         footprints.push(b)
-        if (dist > 560) continue
-        blocks.push({ ...b, h: 22 + hash(k, m) ** 2 * 170 * (1 - dist / 900), delay: dist / 560 })
+        const road = distToRoute(cu, cv)
+        if (dist > 560 && road > 150) continue
+        const start = Math.hypot(cu - ROUTE[0][0], cv - ROUTE[0][1])
+        blocks.push({ ...b, h: 22 + hash(k, m) ** 2 * 170 * Math.max(0.3, 1 - dist / 900), delay: Math.min(1.2, start / 600) })
       }
     }
     tower = blocks.find((b) => b.own)
@@ -286,25 +382,37 @@ export function createScene() {
 
   const camera = (progress) => {
     const p = progress * STORY_END
-    const f = keys.focus(p)
     const k = keys.frame(p)
+    let zoom = keys.zoom(p)
+    let pitch = keys.pitch(p)
+    let yaw = keys.yaw(p)
+    let f = keys.focus(p)
+    const w = chaseWeight(p)
+    if (w > 0) {
+      const c = chaseView(p)
+      zoom = lerp(zoom, c.zoom, w)
+      pitch = lerp(pitch, c.pitch, w)
+      yaw = lerp(yaw, c.yaw, w)
+      f = [lerp(f[0], c.focus[0], w), lerp(f[1], c.focus[1], w)]
+    }
     return {
-      zoom: Math.exp(keys.zoom(p)),
-      pitch: keys.pitch(p),
-      yaw: keys.yaw(p),
+      zoom: Math.exp(zoom),
+      pitch,
+      yaw,
       fx: f[0],
       fy: f[1],
       fz: keys.fz(p) * U,
       ox: frame.ox * k,
       oy: frame.oy * k,
       contour: keys.contour(p),
-      relief: 0.22 + 0.78 * smooth(1, STORY_END, p),
+      relief: 0.22 + 0.78 * smooth(1.14, STORY_END, p),
     }
   }
 
   // The contour field settles into rings around the court while it inks in, holds the court's shape
-  // for a beat once the lines have gone, then relaxes. Inside the tower the contour plane rises to
-  // Floor 23, takes the floor's outline as the room fades, and rides back down with the camera.
+  // for a beat once the lines have gone, then relaxes. When the route reaches Floor 23 the contour
+  // plane rushes up to the floor and rings out from it like a pulse, holds there under the room,
+  // takes the floor's outline as the room fades, and rides back down with the camera.
   const ground = (progress) => {
     const p = progress * STORY_END
     const court = smooth(0.02, 0.085, p) * (1 - smooth(0.31, 0.36, p))
@@ -312,11 +420,14 @@ export function createScene() {
       const [x, y] = world(0, COURT.v)
       return { k: court, x, y, cos: CA, sin: SA, hu: D * U, hv: L * U, step: 12 * U, rings: 4, z: 0 }
     }
-    const z = p < 0.84 ? 0 : p < 1 ? ZF * smooth(0.84, 0.9, p) : Math.max(0, keys.fz(p) - 1)
+    const z = p < 0.86 ? 0 : p < 1.14 ? ZF * smooth(0.86, 0.9, p) : Math.max(0, keys.fz(p) - 1)
     if (z <= 0) return null
     const [x, y] = world(tu, tv)
-    const k = smooth(0.94, 0.98, p) * (1 - smooth(1.02, 1.08, p))
-    return { k, x, y, cos: CA, sin: SA, hu: (TOWER.width / 2) * U, hv: (DEPTH / 2) * U, step: 3 * U, rings: 4, z: z * U }
+    const box = { x, y, cos: CA, sin: SA, hu: (TOWER.width / 2) * U, hv: (DEPTH / 2) * U, z: z * U }
+    const pulse = window4(p, 0.875, 0.895, 0.94, 0.98)
+    if (pulse > 0) return { ...box, k: pulse, step: (2 + 7 * smooth(0.88, 0.97, p)) * U, rings: 5 }
+    const k = smooth(1.08, 1.12, p) * (1 - smooth(1.16, 1.22, p))
+    return { ...box, k, step: 3 * U, rings: 4 }
   }
 
   const draw = (ctx, { p: progress, time, pt, cam, colors }) => {
@@ -337,6 +448,8 @@ export function createScene() {
         faces: [mix(paper, ink, 0.17), mix(paper, ink, 0.1), mix(paper, ink, 0.02), mix(paper, ink, 0.06)],
         cut: mix(paper, ink, 0.72),
         core: [mix(paper, ink, 0.3), mix(paper, ink, 0.24), mix(paper, ink, 0.16), mix(paper, ink, 0.2)],
+        car: [mix(ink, paper, 0.08), mix(ink, paper, 0.22), mix(ink, paper, 0.34), mix(ink, paper, 0.18)],
+        roof: mix(ink, paper, 0.3),
       }
     }
 
@@ -345,16 +458,41 @@ export function createScene() {
       const [x, y] = world(u, v)
       return pt(x, y, z * U)
     }
+    const atP = (q) => at(q[0], q[1], q[2] || 0)
+    // Where a line from a point the camera can see to one behind it leaves the view
+    const edge = (good, bad) => {
+      let lo = 0
+      let hi = 1
+      let q = atP(good)
+      for (let i = 0; i < 10; i++) {
+        const m = (lo + hi) / 2
+        const r = at(lerp(good[0], bad[0], m), lerp(good[1], bad[1], m), lerp(good[2] || 0, bad[2] || 0, m))
+        if (r) {
+          lo = m
+          q = r
+        } else hi = m
+      }
+      return q
+    }
+    // Low chase views put parts of the map behind the camera, so lines are cut where they leave it
     const path = (pts, close) => {
+      const list = close && pts.length ? [...pts, pts[0]] : pts
       let started = false
-      for (const [u, v, z] of pts) {
-        const q = at(u, v, z)
-        if (!q) continue
+      const to = (q) => {
         if (started) g.lineTo(q[0], q[1])
         else {
           g.moveTo(q[0], q[1])
           started = true
         }
+      }
+      let prev = null
+      let prevQ = null
+      for (const p3 of list) {
+        const q = atP(p3)
+        if (prev && !q !== !prevQ) to(q ? edge(p3, prev) : edge(prev, p3))
+        if (q) to(q)
+        prev = p3
+        prevQ = q
       }
       if (close && started) g.closePath()
     }
@@ -364,17 +502,33 @@ export function createScene() {
       g.closePath()
     }
     const seg = (a, b, k = 1) => {
-      const q0 = at(a[0], a[1], a[2] || 0)
-      const q1 = at(a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, (a[2] || 0) + ((b[2] || 0) - (a[2] || 0)) * k)
-      if (!q0 || !q1) return
-      g.moveTo(q0[0], q0[1])
-      g.lineTo(q1[0], q1[1])
+      const end = [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, (a[2] || 0) + ((b[2] || 0) - (a[2] || 0)) * k]
+      const q0 = atP(a)
+      const q1 = atP(end)
+      if (!q0 && !q1) return
+      const s0 = q0 || edge(end, a)
+      const s1 = q1 || edge(a, end)
+      g.moveTo(s0[0], s0[1])
+      g.lineTo(s1[0], s1[1])
     }
     const court = (x, y, z = 0) => [x, COURT.v + y, z]
+    // A flat band along a polyline on the ground, so it narrows into the distance like a road marking
+    const ribbon = (pts, hw, z = 0) => {
+      for (let i = 0; i < pts.length - 1; i++) {
+        const [u0, v0] = pts[i]
+        const [u1, v1] = pts[i + 1]
+        const len = Math.hypot(u1 - u0, v1 - v0)
+        if (len < 1e-6) continue
+        const nu = (-(v1 - v0) / len) * hw
+        const nv = ((u1 - u0) / len) * hw
+        path([[u0 + nu, v0 + nv, z], [u1 + nu, v1 + nv, z], [u1 - nu, v1 - nv, z], [u0 - nu, v0 - nv, z]], true)
+      }
+      for (const [u, v] of pts.slice(1, -1)) path([[u - hw, v + hw, z], [u + hw, v + hw, z], [u + hw, v - hw, z], [u - hw, v - hw, z]], true)
+    }
 
     // A shaded box: visible sides, then the top. Returns which sides were visible.
-    const prism = (b, z0, z1, { solid = 1, faces = tones.faces, top = tones.land, edge = colors['contour-strong'], line = 0.55 } = {}) => {
-      const base = rect(b)
+    const prism = (b, z0, z1, opts) => solid(rect(b), z0, z1, opts)
+    const solid = (base, z0, z1, { solid = 1, faces = tones.faces, top = tones.land, edge = colors['contour-strong'], line = 0.55 } = {}) => {
       const lo = base.map(([u, v]) => at(u, v, z0))
       const hi = base.map(([u, v]) => at(u, v, z1))
       if (lo.some((q) => !q) || hi.some((q) => !q)) return null
@@ -445,7 +599,7 @@ export function createScene() {
     g.lineCap = 'round'
     g.globalAlpha = 1
 
-    const outside = 1 - smooth(0.77, 0.82, p)
+    const outside = 1 - smooth(0.8, 0.86, p)
 
     // Manhattan, block by block
     const map = smooth(0.33, 0.4, p) * outside
@@ -646,58 +800,59 @@ export function createScene() {
       }
     }
 
-    // A 9-1-1 call and the unit routed along the grid to it
-    const call = window4(p, 0.41, 0.44, 0.53, 0.56)
+    // A 9-1-1 call and the unit's route to it: drawn in from above, then driven
+    const call = window4(p, 0.41, 0.44, 0.64, 0.7)
+    const rise = smooth(0.44, 0.52, p)
+    const s = driven(p)
+    const toLocal = (pts) => pts.map((q) => local(...q))
     if (call > 0) {
-      const legs = [
-        [AVENUES[2], 12 * STREET],
-        [AVENUES[2], CROSSING],
-        [AVENUES[6], CROSSING],
-        [AVENUES[6], -2 * STREET],
-        [tu, -2 * STREET],
-      ]
-      const lens = legs.slice(1).map((q, i) => Math.hypot(q[0] - legs[i][0], q[1] - legs[i][1]))
-      let left = smooth(0.43, 0.51, p) * lens.reduce((x, y) => x + y, 0)
-      const run = [legs[0]]
-      for (let i = 0; i < lens.length && left > 0; i++) {
-        const k = Math.min(1, left / lens[i])
-        run.push([legs[i][0] + (legs[i + 1][0] - legs[i][0]) * k, legs[i][1] + (legs[i + 1][1] - legs[i][1]) * k])
-        left -= lens[i]
-      }
+      const drawn = smooth(0.42, 0.46, p)
+      const planned = trim(ROUTE, drawn)
+      const rw = clamp(2.2 / zs, 1.2, 4)
       g.globalAlpha = call
-      g.strokeStyle = colors.paper
-      g.lineWidth = 8
+      g.fillStyle = colors.paper
       g.beginPath()
-      path(run)
-      g.stroke()
-      g.strokeStyle = colors.signal
-      g.lineWidth = 3.5
+      ribbon(planned, rw * 2)
+      g.fill()
+      g.globalAlpha = call * 0.45
+      g.fillStyle = colors.signal
       g.beginPath()
-      path(run)
-      g.stroke()
-      const start = at(...legs[0])
-      const head = at(...run[run.length - 1])
-      if (start && head) {
+      ribbon(planned, rw)
+      g.fill()
+      if (s > 0) {
+        g.globalAlpha = call
+        g.beginPath()
+        ribbon(trim(ROUTE, s / ROUTE_LENGTH), rw)
+        g.fill()
+      }
+      const start = at(...ROUTE[0])
+      if (start) {
+        g.globalAlpha = call
         g.fillStyle = colors.ink
         g.fillRect(start[0] - 4, start[1] - 4, 8, 8)
+      }
+      const head = at(...planned[planned.length - 1])
+      if (head && drawn < 1) {
         g.fillStyle = colors.paper
+        g.strokeStyle = colors.signal
+        g.lineWidth = 2.5
         g.beginPath()
         g.arc(head[0], head[1], 5, 0, Math.PI * 2)
         g.fill()
-        g.lineWidth = 2.5
         g.stroke()
       }
 
+      const pin = call * (1 - rise)
       const q = at(tu, tv)
-      if (q) {
+      if (q && pin > 0) {
         const w = (time / 1800) % 1
         g.strokeStyle = colors.signal
         g.lineWidth = 1.5
-        g.globalAlpha = call * (1 - w) * 0.8
+        g.globalAlpha = pin * (1 - w) * 0.8
         g.beginPath()
         g.arc(q[0], q[1], 8 + w * 16, 0, Math.PI * 2)
         g.stroke()
-        g.globalAlpha = call
+        g.globalAlpha = pin
         g.fillStyle = colors.paper
         g.beginPath()
         g.arc(q[0], q[1], 8, 0, Math.PI * 2)
@@ -706,103 +861,337 @@ export function createScene() {
         g.beginPath()
         g.arc(q[0], q[1], 5.5, 0, Math.PI * 2)
         g.fill()
-        tag(q, [['9-1-1 call', 650, 16, colors.ink]], call, 1, 16)
+        tag(q, [['9-1-1 call', 650, 16, colors.ink]], pin, 1, 16)
       }
     }
 
-    // The blocks rise into buildings, then fall away as the camera goes inside the tower
-    const rise = smooth(0.56, 0.68, p)
-    const city = rise * (1 - smooth(0.76, 0.81, p))
-    const xray = smooth(0.65, 0.68, p)
-    const lit = smooth(0.62, 0.66, p) * (1 - smooth(0.8, 0.84, p))
-    const shell = 1 - smooth(0.78, 0.83, p)
-    if (rise > 0 && shell > 0) {
-      const order = []
+    // The response unit: headlights down the road, its light bar flashing, a glow on the tarmac
+    const car = ([u, v, a], alpha) => {
+      const c = Math.cos(a)
+      const sn = Math.sin(a)
+      const off = (f, l) => [u + c * f - sn * l, v + sn * f + c * l]
+      const box = (f0, f1, l0, l1) => [off(f0, l0), off(f1, l0), off(f1, l1), off(f0, l1)]
+      const flash = Math.floor(time / 240) % 2
+      g.globalAlpha = alpha * (0.1 + 0.08 * flash)
+      g.fillStyle = colors.signal
+      g.beginPath()
+      path(Array.from({ length: 20 }, (_, i) => off(Math.cos((i / 20) * Math.PI * 2) * 6, Math.sin((i / 20) * Math.PI * 2) * 3.6)), true)
+      g.fill()
+      g.globalAlpha = alpha * 0.16
+      g.fillStyle = colors.paper
+      g.beginPath()
+      path([off(4, -1.5), off(24, -7), off(24, 7), off(4, 1.5)], true)
+      g.fill()
+      g.lineWidth = 0.75
+      const body = { solid: alpha, faces: tones.car, top: tones.roof, edge: colors.ink, line: 0.35 }
+      solid(box(-4, 4, -1.9, 1.9), 0.5, 2.4, body)
+      solid(box(-2.6, 1.4, -1.6, 1.6), 2.4, 3.5, body)
+      const lamp = (on) => ({ solid: alpha, faces: Array(4).fill(on ? colors.signal : colors.paper), top: on ? colors.signal : colors.paper, edge: colors.ink, line: 0.3 })
+      solid(box(-1.5, -0.5, -1.3, 0), 3.5, 4.1, lamp(flash))
+      solid(box(-1.5, -0.5, 0, 1.3), 3.5, 4.1, lamp(!flash))
+    }
+
+    // The blocks rise around the unit as the camera drops in behind it, and fall away once it is
+    // inside the tower
+    const city = rise * (1 - smooth(0.62, 0.67, p))
+    const xray = smooth(0.6, 0.65, p)
+    const lit = smooth(0.5, 0.56, p) * (1 - smooth(0.64, 0.68, p))
+    const shell = 1 - smooth(0.66, 0.71, p)
+    const unit = window4(p, 0.43, 0.46, 0.8, 0.85)
+    const order = []
+    if (rise > 0) {
       for (const b of blocks) {
-        const own = b.own
-        if (!own && city <= 0) continue
-        const k = ease(clamp01(rise * 1.6 - b.delay * 0.6))
+        if (b.own ? shell <= 0 : city <= 0) continue
+        const k = ease(clamp01(rise * 1.8 - b.delay * 0.6))
         if (k <= 0) continue
         const q = at((b.u0 + b.u1) / 2, (b.v0 + b.v1) / 2)
         if (q) order.push({ b, h: b.h * k, d: q[1] })
       }
-      order.sort((x, y) => x.d - y.d)
-      g.lineWidth = 0.75
-      for (const { b, h } of order) {
-        if (!b.own) {
-          prism(b, 0, h, { solid: city })
-          continue
-        }
-        const solid = (1 - 0.78 * xray) * shell
-        const glow = lit > 0
-        const sides = prism(b, 0, h, { solid, edge: glow ? colors.signal : colors['contour-strong'], line: glow ? 1 / Math.max(solid, 0.01) * shell : 0.55 })
-        if (!sides || !glow) continue
-        const base = rect(b)
-        g.strokeStyle = colors.signal
-        for (const i of sides) {
-          const [ua, va] = base[i]
-          const [ub, vb] = base[(i + 1) % 4]
-          const level = (f) => [at(ua, va, (h * f) / TOWER.floors), at(ub, vb, (h * f) / TOWER.floors)]
-          if (xray > 0) {
-            g.globalAlpha = xray * 0.45 * shell
-            g.beginPath()
-            for (let f = 1; f < TOWER.floors; f++) {
-              const [s0, s1] = level(f)
-              if (!s0 || !s1) continue
-              g.moveTo(s0[0], s0[1])
-              g.lineTo(s1[0], s1[1])
-            }
-            g.stroke()
+    }
+    let subject = H * 0.62
+    if (unit > 0) {
+      const [cu, cv] = along(s)
+      const q = at(cu, cv)
+      if (q) {
+        order.push({ car: [cu, cv, heading(s, 5)], d: q[1] })
+        subject = q[1]
+      }
+    }
+    // Low over the street, anything between the camera and the unit thins out of the way
+    const thin = smooth(0.45, 0.5, p)
+    order.sort((x, y) => x.d - y.d)
+    g.lineWidth = 0.75
+    for (const { b, h, d, car: driving } of order) {
+      if (driving) {
+        car(driving, unit)
+        g.lineWidth = 0.75
+        continue
+      }
+      if (!b.own) {
+        prism(b, 0, h, { solid: city * (1 - 0.85 * thin * smooth(subject - 60, subject + 120, d)) })
+        continue
+      }
+      const body = (1 - 0.8 * xray) * shell
+      const glow = lit > 0
+      const sides = prism(b, 0, h, { solid: body, edge: glow ? colors.signal : colors['contour-strong'], line: glow ? (1 / Math.max(body, 0.01)) * shell : 0.55 })
+      if (!sides || !glow) continue
+      const base = rect(b)
+      g.strokeStyle = colors.signal
+      for (const i of sides) {
+        const [ua, va] = base[i]
+        const [ub, vb] = base[(i + 1) % 4]
+        const level = (f) => [at(ua, va, (h * f) / TOWER.floors), at(ub, vb, (h * f) / TOWER.floors)]
+        if (xray > 0) {
+          g.globalAlpha = xray * 0.45 * shell
+          g.beginPath()
+          for (let f = 1; f < TOWER.floors; f++) {
+            const [s0, s1] = level(f)
+            if (!s0 || !s1) continue
+            g.moveTo(s0[0], s0[1])
+            g.lineTo(s1[0], s1[1])
           }
-          const [c0, d0] = level(TOWER.floor - 1)
-          const [c1, d1] = level(TOWER.floor)
-          if (!c0 || !d0 || !c1 || !d1) continue
-          g.globalAlpha = lit * 0.9
-          g.fillStyle = colors.signal
-          poly([c0, d0, d1, c1])
-          g.fill()
+          g.stroke()
         }
+        const [c0, d0] = level(TOWER.floor - 1)
+        const [c1, d1] = level(TOWER.floor)
+        if (!c0 || !d0 || !c1 || !d1) continue
+        g.globalAlpha = lit * 0.9
+        g.fillStyle = colors.signal
+        poly([c0, d0, d1, c1])
+        g.fill()
+      }
+    }
+
+    const hw = clamp(1.8 / zs, 0.22, 4)
+    const floorPath = (b, z = 0) => path(rect(floorBox(b)).map(([u, v]) => [u, v, z]), true)
+    const depthOf = (u, v, z = 0) => at(u, v, z)?.[1] ?? 0
+
+    // The ground floor as indoor navigation reads it: the exits, then the stairs, then the shared
+    // rooms are picked out in turn, and the route walks from the curb to Stair A
+    const lobby = window4(p, 0.63, 0.68, 0.84, 0.88)
+    if (lobby > 0 && tower) {
+      const exits = smooth(0.665, 0.69, p)
+      const stairs = smooth(0.69, 0.715, p)
+      const rooms = smooth(0.715, 0.74, p)
+      const named = 1 - smooth(0.765, 0.79, p)
+      g.globalAlpha = lobby
+      g.fillStyle = tones.land
+      g.beginPath()
+      floorPath([0, 0, TOWER.width, DEPTH])
+      g.fill()
+
+      if (rooms > 0) {
+        g.globalAlpha = lobby * rooms * 0.16
+        g.fillStyle = colors.signal
+        g.beginPath()
+        for (const r of ROOMS) floorPath(r.b)
+        g.fill()
       }
 
-      if (tower) {
-        const zc = ZF + 1.7
-        const dot = window4(p, 0.65, 0.68, 0.79, 0.83)
-        const q = at(caller[0], caller[1], zc)
-        if (q && dot > 0) {
-          const w = (time / 1500) % 1
+      g.globalAlpha = lobby * 0.7
+      g.strokeStyle = colors['contour-strong']
+      g.lineWidth = 1
+      g.beginPath()
+      for (const [x0, y0, x1, y1] of STAIRS) {
+        const mid = (x0 + x1) / 2
+        seg([...local(mid, y0 + 2), 0.02], [...local(mid, y1 - 0.4), 0.02])
+        for (let y = y0 + 2; y < y1 - 0.3; y += 0.8) seg([...local(x0 + 0.4, y), 0.02], [...local(x1 - 0.4, y), 0.02])
+      }
+      g.stroke()
+
+      const walk = trim(LOBBY_ROUTE, smooth(0.73, 0.775, p))
+      if (walk.length > 1) {
+        g.globalAlpha = lobby
+        g.fillStyle = colors.paper
+        g.beginPath()
+        ribbon(toLocal(walk), hw * 1.9, 0.05)
+        g.fill()
+        g.fillStyle = colors.signal
+        g.beginPath()
+        ribbon(toLocal(walk), hw, 0.05)
+        g.fill()
+      }
+
+      const boxes = [
+        ...GROUND_WALLS.map((w) => ({ b: wallBox(w), z: WALL, cut: true })),
+        { b: floorBox(CORE), z: WALL + 0.6, core: true },
+      ]
+        .map((box) => ({ ...box, d: depthOf((box.b.u0 + box.b.u1) / 2, (box.b.v0 + box.b.v1) / 2) }))
+        .sort((x, y) => x.d - y.d)
+      g.lineWidth = 0.75
+      for (const box of boxes) {
+        prism(box.b, 0, box.z, { solid: lobby, faces: box.core ? tones.core : tones.faces, top: tones.cut, line: 0.6 })
+      }
+
+      // A bracket that closes in on each feature as it is identified
+      const lockOn = (b, k, z = WALL + 0.4) => {
+        const grow = (1 - k) * 3
+        g.globalAlpha = lobby * k
+        g.strokeStyle = colors.signal
+        g.lineWidth = 1.75
+        g.beginPath()
+        floorPath([b[0] - grow, b[1] - grow, b[2] + grow, b[3] + grow], z)
+        g.stroke()
+      }
+      if (exits > 0) {
+        for (const e of EXITS) {
+          const [x, y] = e.at
+          const [ox, oy] = e.out
+          const half = e.span / 2
+          g.globalAlpha = lobby * exits
           g.strokeStyle = colors.signal
-          g.lineWidth = 1.5
-          g.globalAlpha = dot * (1 - w)
+          g.lineWidth = 4
           g.beginPath()
-          g.arc(q[0], q[1], 5 + w * 14, 0, Math.PI * 2)
+          seg([...local(x + oy * half, y - ox * half), 0.1], [...local(x - oy * half, y + ox * half), 0.1])
           g.stroke()
-          g.globalAlpha = dot
-          g.fillStyle = colors.signal
+          if (!e.name) continue
+          const d = 1.4 + pingpong(time * 0.003, 1.2)
+          g.lineWidth = 2.5
           g.beginPath()
-          g.arc(q[0], q[1], 4.5, 0, Math.PI * 2)
-          g.fill()
+          path([
+            [...local(x + ox * (d + 1) + oy * 1.4, y + oy * (d + 1) - ox * 1.4), 0.1],
+            [...local(x + ox * (d + 2.4), y + oy * (d + 2.4)), 0.1],
+            [...local(x + ox * (d + 1) - oy * 1.4, y + oy * (d + 1) + ox * 1.4), 0.1],
+          ])
+          g.stroke()
+          tag(at(...local(x + ox * 5, y + oy * 5), 0.1), [[e.name, 650, 14, colors.ink]], lobby * exits * named, ox || 1, 0)
         }
-        const corners = rect(tower).map(([u, v]) => at(u, v, ZF + 3.75)).filter(Boolean)
-        if (corners.length) {
-          const right = corners.reduce((a, c) => (c[0] > a[0] ? c : a))
-          const left = corners.reduce((a, c) => (c[0] < a[0] ? c : a))
-          tag(right, [[`Floor ${TOWER.floor}`, 700, 20, colors.ink]], window4(p, 0.66, 0.69, 0.73, 0.76), 1, 26, left)
+      }
+      if (stairs > 0) {
+        STAIRS.forEach((b, i) => {
+          lockOn(b, stairs)
+          tag(at(...local((b[0] + b[2]) / 2, b[1]), WALL + 0.4), [[`Stair ${'AB'[i]}`, 650, 14, colors.ink]], lobby * stairs * named, 0)
+        })
+      }
+      if (rooms > 0) {
+        for (const r of ROOMS) {
+          lockOn(r.b, rooms, 0.05)
+          tag(at(...local((r.b[0] + r.b[2]) / 2, (r.b[1] + r.b[3]) / 2), 0.1), [[r.name, 650, 14, colors.ink]], lobby * rooms * named, 0)
         }
       }
     }
 
+    // Up Stair A: the route climbs, the floors stream past the camera, and Floor 23 waits lit above
+    const ghosts = smooth(0.66, 0.72, p) * (1 - smooth(0.93, 0.98, p))
+    const climb = smooth(0.78, 0.88, p)
+    const per = TOWER.height / TOWER.floors
+    if (ghosts > 0 && tower) {
+      const eye = cam.fz / U
+      const outline = rect(tower)
+      g.lineWidth = 1
+      for (let n = 2; n <= TOWER.floors; n++) {
+        const z = (n - 1) * per
+        const near = 1 - clamp01(Math.abs(z - eye) / 80)
+        g.globalAlpha = ghosts * (0.14 + 0.5 * near)
+        g.strokeStyle = n === TOWER.floor ? colors.signal : colors['contour-strong']
+        g.lineWidth = n === TOWER.floor ? 2.5 : 1
+        g.beginPath()
+        path(outline.map(([u, v]) => [u, v, z]), true)
+        g.stroke()
+        g.globalAlpha = ghosts * (0.2 + 0.5 * near)
+        g.strokeStyle = colors.signal
+        g.lineWidth = 1
+        g.beginPath()
+        floorPath(STAIRS[0], z)
+        g.stroke()
+      }
+      g.globalAlpha = ghosts * 0.35
+      g.strokeStyle = colors['contour-strong']
+      g.beginPath()
+      for (const [u, v] of outline) seg([u, v, 0], [u, v, TOWER.height])
+      g.stroke()
+
+      const callerDot = window4(p, 0.74, 0.78, 0.93, 0.97)
+      const cq = at(caller[0], caller[1], ZF + 1.7)
+      if (cq && callerDot > 0) {
+        const w = (time / 1500) % 1
+        g.strokeStyle = colors.signal
+        g.lineWidth = 1.5
+        g.globalAlpha = callerDot * (1 - w)
+        g.beginPath()
+        g.arc(cq[0], cq[1], 5 + w * 14, 0, Math.PI * 2)
+        g.stroke()
+        g.globalAlpha = callerDot
+        g.fillStyle = colors.signal
+        g.beginPath()
+        g.arc(cq[0], cq[1], 4.5, 0, Math.PI * 2)
+        g.fill()
+      }
+
+      if (climb > 0) {
+        const [su, sv] = local(...UP)
+        const top = [su, sv, climb * ZF]
+        g.globalAlpha = ghosts
+        g.strokeStyle = colors.paper
+        g.lineWidth = 8
+        g.beginPath()
+        seg([su, sv, 0], top)
+        g.stroke()
+        g.strokeStyle = colors.signal
+        g.lineWidth = 3.5
+        g.beginPath()
+        seg([su, sv, 0], top)
+        g.stroke()
+        const hq = atP(top)
+        if (hq) {
+          g.fillStyle = colors.paper
+          g.lineWidth = 2.5
+          g.beginPath()
+          g.arc(hq[0], hq[1], 5, 0, Math.PI * 2)
+          g.fill()
+          g.stroke()
+          const n = 1 + Math.round(climb * (TOWER.floor - 1))
+          tag(hq, [[`Floor ${n}`, 700, 18, colors.ink]], ghosts * window4(p, 0.775, 0.79, 0.9, 0.93), 1, 16)
+        }
+      }
+    }
+
+    // Arrival: Floor 23 flashes and rings out across the field
+    const flash = window4(p, 0.872, 0.885, 0.9, 0.95)
+    if (flash > 0 && tower) {
+      g.globalAlpha = flash * 0.75
+      g.fillStyle = colors.signal
+      g.beginPath()
+      path(rect(tower).map(([u, v]) => [u, v, ZF]), true)
+      g.fill()
+    }
+    const ripple = window4(p, 0.875, 0.89, 0.95, 0.99)
+    if (ripple > 0) {
+      const rounded = (grow) => {
+        const pts = []
+        const hu = TOWER.width / 2
+        const hv = DEPTH / 2
+        for (const [cx, cy, a0] of [[1, 1, 0], [-1, 1, 0.5], [-1, -1, 1], [1, -1, 1.5]]) {
+          for (let i = 0; i <= 6; i++) {
+            const a = (a0 + i / 12) * Math.PI
+            pts.push([tu + cx * hu + Math.cos(a) * grow, tv + cy * hv + Math.sin(a) * grow, ZF])
+          }
+        }
+        return pts
+      }
+      g.strokeStyle = colors.signal
+      for (let i = 0; i < 4; i++) {
+        const r = clamp01((p - 0.877 - i * 0.012) / 0.07)
+        if (r <= 0 || r >= 1) continue
+        g.globalAlpha = ripple * (1 - r) ** 1.5
+        g.lineWidth = 0.75 + 3 * (1 - r)
+        g.beginPath()
+        path(rounded(1 + ease(r) * 95), true)
+        g.stroke()
+      }
+    }
+
     // Inside floor 23: a cutaway plan, a radar on the south wall, and the people it tracks
-    const room = window4(p, 0.79, 0.84, 0.97, 1.01)
+    const room = window4(p, 0.93, 0.98, 1.11, 1.15)
     if (room > 0 && tower) {
-      const tracked = window4(p, 0.83, 0.86, 0.94, 0.97)
-      const fan = room * smooth(0.82, 0.86, p)
-      const floorPath = (b) => path(rect(floorBox(b)).map(([u, v]) => [u, v, ZF]), true)
+      const tracked = window4(p, 0.97, 1, 1.08, 1.11)
+      const fan = room * smooth(0.96, 1, p)
 
       const slab = [0, 0, TOWER.width, DEPTH]
       g.globalAlpha = room
       g.fillStyle = tones.land
       g.beginPath()
-      floorPath(slab)
+      floorPath(slab, ZF)
       g.fill()
       g.save()
       g.clip()
@@ -833,8 +1222,23 @@ export function createScene() {
       g.strokeStyle = colors.signal
       g.lineWidth = 1.5
       g.beginPath()
-      floorPath(slab)
+      floorPath(slab, ZF)
       g.stroke()
+
+      // Out of the stairwell and across the floor to the caller
+      const crossing = window4(p, 0.93, 0.95, 1, 1.04)
+      const walk = trim(FLOOR_ROUTE, smooth(0.93, 0.985, p))
+      if (crossing > 0 && walk.length > 1) {
+        g.globalAlpha = crossing
+        g.fillStyle = colors.paper
+        g.beginPath()
+        ribbon(toLocal(walk), hw * 1.9, ZF + 0.05)
+        g.fill()
+        g.fillStyle = colors.signal
+        g.beginPath()
+        ribbon(toLocal(walk), hw, ZF + 0.05)
+        g.fill()
+      }
 
       const walker = (t) => [2 + pingpong(t * 0.0026, 36), 9.2]
       const pacer = (t) => [27 + pingpong(t * 0.0016, 11), 19.4]
@@ -865,10 +1269,9 @@ export function createScene() {
         ...DESKS.map((d) => ({ b: floorBox(d), z: 1.5 })),
         { b: floorBox(CORE), z: WALL + 0.6, core: true },
       ]
-      const depthOf = (u, v) => at(u, v, ZF)?.[1] ?? 0
       const items = [
-        ...boxes.map((box) => ({ ...box, d: depthOf((box.b.u0 + box.b.u1) / 2, (box.b.v0 + box.b.v1) / 2) })),
-        ...people.map((who) => ({ who, d: depthOf(...local(who.x, who.y)) + 0.5 })),
+        ...boxes.map((box) => ({ ...box, d: depthOf((box.b.u0 + box.b.u1) / 2, (box.b.v0 + box.b.v1) / 2, ZF) })),
+        ...people.map((who) => ({ who, d: depthOf(...local(who.x, who.y), ZF) + 0.5 })),
       ].sort((x, y) => x.d - y.d)
 
       g.lineWidth = 0.75

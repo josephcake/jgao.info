@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 
 const ease = [0.22, 1, 0.36, 1]
+const COMPACT = '(max-width: 600px)'
 
 function matches(cmd, query) {
   if (!query) return true
@@ -16,7 +17,20 @@ export default function CommandPalette({ open, onClose, commands }) {
   const listRef = useRef(null)
   const returnFocus = useRef(null)
 
-  const results = useMemo(() => commands.filter((c) => matches(c, query)), [commands, query])
+  const [compact, setCompact] = useState(() => window.matchMedia(COMPACT).matches)
+
+  useEffect(() => {
+    const mq = window.matchMedia(COMPACT)
+    const update = () => setCompact(mq.matches)
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
+  // On phones the theme lives in this menu rather than the nav, so it comes first
+  const results = useMemo(() => {
+    const found = commands.filter((c) => matches(c, query))
+    return compact ? [...found.filter((c) => c.swatch), ...found.filter((c) => !c.swatch)] : found
+  }, [commands, query, compact])
 
   useEffect(() => {
     if (open) {
@@ -114,7 +128,10 @@ export default function CommandPalette({ open, onClose, commands }) {
                     onMouseMove={() => setIndex(i)}
                     onClick={() => run(cmd)}
                   >
-                    <span>{cmd.label}</span>
+                    {cmd.swatch && (
+                      <span className={`palette__swatch theme-switch__option--${cmd.swatch}`} aria-hidden="true" />
+                    )}
+                    <span className="palette__label">{cmd.label}</span>
                     {cmd.hint && <span className="palette__hint">{cmd.hint}</span>}
                   </div>
                 </li>
