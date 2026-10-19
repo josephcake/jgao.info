@@ -388,11 +388,13 @@ main,
 /* Hero */
 .hero {
   position: relative;
-  height: 630svh;
+  height: 650svh;
+  margin-bottom: -40svh;
 }
 
 .hero__stage {
   position: sticky;
+  pointer-events: none;
   top: 0;
   height: 100svh;
   max-width: var(--max);
@@ -405,6 +407,9 @@ main,
 
 .hero__name {
   transform-origin: 0 100%;
+  perspective: 1100px;
+  perspective-origin: 30% 0%;
+  pointer-events: auto;
 }
 
 .hero__duck {
@@ -446,6 +451,7 @@ main,
 @media (prefers-reduced-motion: reduce) {
   .hero {
     height: auto;
+    margin-bottom: 0;
   }
 
   .hero__stage {
@@ -464,20 +470,53 @@ main,
   letter-spacing: -0.035em;
 }
 
-.hero__word {
+.hero__plane {
   display: block;
+  transform-origin: 30% 100%;
+  transform-style: preserve-3d;
 }
 
-.hero__clip {
+.hero__word {
+  display: block;
+  transform-style: preserve-3d;
+}
+
+.hero__letter {
+  --rise: 1;
+  --fill: 1;
+  --lift: 0;
+  --step: calc(var(--rise) * 0.07em + var(--lift) * 0.07em);
+  position: relative;
   display: inline-block;
-  overflow: hidden;
-  padding-bottom: 0.14em;
-  margin-bottom: -0.14em;
-  vertical-align: top;
+  transform-style: preserve-3d;
 }
 
 .hero__char {
+  position: relative;
   display: inline-block;
+  color: transparent;
+  -webkit-text-stroke: calc((1 - var(--fill)) * 1.5px) var(--ink);
+  transform: translateZ(calc(var(--rise) * 0.04em + var(--lift) * 0.14em));
+}
+
+.hero__char::after {
+  content: attr(data-char);
+  position: absolute;
+  inset: -0.2em 0;
+  padding: 0.2em 0;
+  color: var(--ink);
+  -webkit-text-stroke: 0;
+  clip-path: inset(calc((1 - var(--fill)) * 100%) 0 0 0);
+}
+
+.hero__slice {
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--signal);
+  opacity: calc(min(1, var(--rise) * 1.5 + var(--lift)) * (0.75 - var(--i) * 0.14));
+  transform: translateZ(calc(var(--i) * var(--step) * -1));
+  pointer-events: none;
 }
 
 .hero__intro {

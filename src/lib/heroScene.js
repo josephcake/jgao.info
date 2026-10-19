@@ -44,7 +44,7 @@ const LINES = [
 export const PITCH_MAX = 0.98
 // Story time runs past 1: a unit is the scroll the first acts were paced on, so lengthening the
 // sensor act lengthens the hero instead of rushing everything before it.
-export const STORY_END = 1.06
+export const STORY_END = 1.1
 
 const clamp01 = (v) => Math.min(1, Math.max(0, v))
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
@@ -188,13 +188,13 @@ export function createScene() {
     const z = Math.log
     const E = STORY_END
     keys = {
-      zoom: spline([[0, 0], [0.13, z(courtZoom)], [0.29, z(courtZoom * 1.03)], [0.4, z(0.46)], [0.55, z(0.5)], [0.66, z(1.12)], [0.74, z(1.22)], [0.84, z(inside)], [0.95, z(inside * 1.05)], [E, 0]]),
-      pitch: spline([[0, 0], [0.03, 0], [0.13, courtPitch[0]], [0.29, courtPitch[1]], [0.4, 0], [0.55, 0], [0.66, PITCH_MAX], [0.74, PITCH_MAX * 0.97], [0.84, look[0]], [0.95, look[1]], [E, 0]]),
-      yaw: spline([[0, 0], [0.03, 0], [0.13, sideline - 0.2], [0.29, sideline - 0.12], [0.4, -ANG], [0.55, -ANG], [0.66, -ANG + 0.08], [0.74, -ANG + 0.16], [0.84, -ANG + 0.24], [0.95, -ANG + 0.3], [E, 0]]),
-      focus: spline([[0, home], [0.13, world(2, COURT.v - 8)], [0.29, world(2, COURT.v + 8)], [0.4, park], [0.55, park], [0.66, towerAt], [0.74, towerAt], [0.84, floorAt], [0.95, floorAt], [E, home]]),
-      fz: spline([[0, 0], [0.56, 0], [0.66, ZF * 0.7], [0.74, ZF * 0.85], [0.84, ZF + 1], [0.95, ZF + 1], [E, 0]]),
-      contour: spline([[0, 1], [0.12, 0.5], [0.3, 0.5], [0.4, 0.22], [0.55, 0.22], [0.66, 0.4], [0.76, 0.4], [0.84, 0.12], [0.95, 0.12], [E, 1]]),
-      frame: spline([[0, 0], [0.12, 1], [0.95, 1], [E, 0]]),
+      zoom: spline([[0, 0], [0.13, z(courtZoom)], [0.31, z(courtZoom * 1.03)], [0.4, z(0.46)], [0.55, z(0.5)], [0.66, z(1.12)], [0.74, z(1.22)], [0.84, z(inside)], [0.95, z(inside * 1.05)], [1, z(inside * 0.94)], [E, 0]]),
+      pitch: spline([[0, 0], [0.03, 0], [0.13, courtPitch[0]], [0.31, courtPitch[1]], [0.4, 0], [0.55, 0], [0.66, PITCH_MAX], [0.74, PITCH_MAX * 0.97], [0.84, look[0]], [0.95, look[1]], [1, look[1] * 0.85], [E, 0]]),
+      yaw: spline([[0, 0], [0.03, 0], [0.13, sideline - 0.2], [0.31, sideline - 0.11], [0.4, -ANG], [0.55, -ANG], [0.66, -ANG + 0.08], [0.74, -ANG + 0.16], [0.84, -ANG + 0.24], [0.95, -ANG + 0.3], [1, -ANG + 0.33], [E, 0]]),
+      focus: spline([[0, home], [0.13, world(2, COURT.v - 8)], [0.31, world(2, COURT.v + 9)], [0.4, park], [0.55, park], [0.66, towerAt], [0.74, towerAt], [0.84, floorAt], [1.05, floorAt], [E, home]]),
+      fz: spline([[0, 0], [0.56, 0], [0.66, ZF * 0.7], [0.74, ZF * 0.85], [0.84, ZF + 1], [1, ZF + 1], [E, 0]]),
+      contour: spline([[0, 1], [0.12, 0.5], [0.25, 0.5], [0.28, 0.85], [0.32, 0.85], [0.4, 0.22], [0.55, 0.22], [0.66, 0.4], [0.76, 0.4], [0.84, 0.12], [0.94, 0.12], [0.99, 0.8], [E, 1]]),
+      frame: spline([[0, 0], [0.12, 1], [1, 1], [E, 0]]),
     }
 
     footprints = []
@@ -263,18 +263,25 @@ export function createScene() {
       ox: frame.ox * k,
       oy: frame.oy * k,
       contour: keys.contour(p),
-      relief: 0.22 + 0.78 * smooth(0.95, STORY_END, p),
+      relief: 0.22 + 0.78 * smooth(1, STORY_END, p),
     }
   }
 
-  // The contour field settles into rings around the court while it inks in, and relaxes back into
-  // plain elevation once the court's lines have gone.
+  // The contour field settles into rings around the court while it inks in, holds the court's shape
+  // for a beat once the lines have gone, then relaxes. Inside the tower the contour plane rises to
+  // Floor 23, takes the floor's outline as the room fades, and rides back down with the camera.
   const ground = (progress) => {
     const p = progress * STORY_END
-    const k = smooth(0.02, 0.085, p) * (1 - smooth(0.3, 0.37, p))
-    if (k <= 0) return null
-    const [x, y] = world(0, COURT.v)
-    return { k, x, y, cos: CA, sin: SA, hu: D * U, hv: L * U, step: 12 * U, rings: 4 }
+    const court = smooth(0.02, 0.085, p) * (1 - smooth(0.31, 0.36, p))
+    if (court > 0) {
+      const [x, y] = world(0, COURT.v)
+      return { k: court, x, y, cos: CA, sin: SA, hu: D * U, hv: L * U, step: 12 * U, rings: 4, z: 0 }
+    }
+    const z = p < 0.84 ? 0 : p < 1 ? ZF * smooth(0.84, 0.9, p) : Math.max(0, keys.fz(p) - 1)
+    if (z <= 0) return null
+    const [x, y] = world(tu, tv)
+    const k = smooth(0.94, 0.98, p) * (1 - smooth(1.02, 1.08, p))
+    return { k, x, y, cos: CA, sin: SA, hu: (TOWER.width / 2) * U, hv: (DEPTH / 2) * U, step: 3 * U, rings: 4, z: z * U }
   }
 
   const draw = (ctx, { p: progress, time, pt, cam, colors }) => {
@@ -403,7 +410,7 @@ export function createScene() {
     const outside = 1 - smooth(0.77, 0.82, p)
 
     // Manhattan, block by block
-    const map = smooth(0.32, 0.4, p) * outside
+    const map = smooth(0.33, 0.4, p) * outside
     if (map > 0) {
       g.globalAlpha = map
       g.fillStyle = tones.land
@@ -428,7 +435,7 @@ export function createScene() {
 
     // The court: the contours settle into its outline, it inks in as lines, then the lines fade back
     // into the contour they were drawn over
-    const inked = smooth(0.08, 0.14, p) * (1 - smooth(0.27, 0.31, p)) * outside
+    const inked = smooth(0.08, 0.14, p) * (1 - smooth(0.25, 0.28, p)) * outside
     if (inked > 0) {
       const thin = clamp(0.38 * zs, 0.75, 1.75)
       g.globalAlpha = inked
@@ -452,7 +459,7 @@ export function createScene() {
       for (const u of [-D - 5, D + 5]) seg(court(u, 0), court(u, 0, 10.7))
       g.stroke()
 
-      const rally = window4(p, 0.13, 0.16, 0.26, 0.29)
+      const rally = window4(p, 0.13, 0.16, 0.24, 0.27)
       if (rally > 0) {
         // Each shot crosses from one baseline to the other, bounces three quarters of the way, and
         // rises to the next racket
@@ -712,7 +719,7 @@ export function createScene() {
     }
 
     // Inside floor 23: a cutaway plan, a radar on the south wall, and the people it tracks
-    const room = window4(p, 0.79, 0.84, 0.97, 1)
+    const room = window4(p, 0.79, 0.84, 0.97, 1.01)
     if (room > 0 && tower) {
       const tracked = window4(p, 0.83, 0.86, 0.94, 0.97)
       const fan = room * smooth(0.82, 0.86, p)

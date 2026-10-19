@@ -109,7 +109,8 @@ export default function Terrain() {
       const cell = CELL * (1 + 0.5 * t)
       grid.cell = cell
       const ox = Math.abs(cam.cx - width / 2)
-      const oy = Math.max(0, cam.cy - height * 0.62) + Math.min(height * 1.2, cam.fz * cam.zoom * 1.2)
+      const above = cam.fz - (court ? court.z : 0)
+      const oy = Math.max(0, cam.cy - height * 0.62) + Math.min(height * 1.2, Math.max(0, above) * cam.zoom * 1.2)
       grid.x0 = -(width * 0.5 + ox) * t
       grid.y0 = -(height * 1.6 + oy) * t
       cols = Math.min(maxCols, Math.ceil((width * (1 + t) + 2 * ox * t) / cell) + 2)
@@ -128,7 +129,7 @@ export default function Terrain() {
           const sx = px * 0.0024
           const sy = (py + drift) * 0.0024
           let val = noise(sx, sy, z) * 0.72 + noise(sx * 2.3, sy * 2.3, z * 1.6) * 0.28
-          if (court) {
+          if (court && court.k > 0) {
             const dx = px - court.x
             const dy = py - court.y
             const qx = Math.abs(dx * court.cos + dy * court.sin) - court.hu
@@ -147,7 +148,7 @@ export default function Terrain() {
       }
     }
 
-    const drawContours = (view, t, after) => {
+    const drawContours = (view, t, after, plane) => {
       const fade = Math.max(0.45, 1 - after / (height * 1.4)) * view.contour
       const bands = t > 0 ? BANDS : 1
       const cell = grid.cell
@@ -155,7 +156,7 @@ export default function Terrain() {
 
       for (let l = 0; l < LEVELS; l++) {
         const level = MIN + l * STEP
-        const lift = level * RISE * view.relief * t - cam.fz * cam.zoom
+        const lift = level * RISE * view.relief * t + (plane - cam.fz) * cam.zoom
         const isIndex = l % 4 === 0
         for (let b = 0; b < bands; b++) {
           const j0 = Math.floor(((rows - 1) * b) / bands)
@@ -233,9 +234,10 @@ export default function Terrain() {
       cam.cx = width / 2 + view.ox
       cam.cy = height * 0.62 + view.oy
 
-      sample(reduceMotion ? 0 : time, after, t, pinned ? scene.ground(p) : null)
+      const ground = pinned ? scene.ground(p) : null
+      sample(reduceMotion ? 0 : time, after, t, ground)
       ctx.clearRect(0, 0, width, height)
-      drawContours(view, t, after)
+      drawContours(view, t, after, ground ? ground.z : 0)
       if (pinned) scene.draw(ctx, { p, time, pt, cam: view, colors })
     }
 
