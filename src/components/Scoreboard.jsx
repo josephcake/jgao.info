@@ -78,13 +78,8 @@ export default function Scoreboard() {
     <section ref={ref} className="section scoreboard" id="scoreboard" aria-labelledby="scoreboard-title">
       <div className="section__head">
         <div>
-          <p className="section__sheet">Sheet 02 of 06</p>
           <h2 id="scoreboard-title" className="section__title">The scoreboard</h2>
         </div>
-        <p className="section__lede">
-          It started with a hacked MySpace profile and an unhealthy obsession with CSS. Here is how
-          it is going.
-        </p>
       </div>
       <ol className={`scoreboard__grid ${inView ? 'is-in' : ''}`}>
         {STATS.map((s, i) => (

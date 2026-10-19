@@ -11,9 +11,6 @@ import Loop from './artifacts/Loop'
 const FOCUS_LINE = 0.55
 const ARTIFACTS = { court: Court, commits: Commits, windows: Windows, loop: Loop }
 
-const formatCoords = ([lat, lng]) =>
-  `${Math.abs(lat).toFixed(2)}° ${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lng).toFixed(2)}° ${lng >= 0 ? 'E' : 'W'}`
-
 export default function Timeline({ chapters }) {
   const trackRef = useRef(null)
   const chapterRefs = useRef([])
@@ -53,7 +50,6 @@ export default function Timeline({ chapters }) {
     <section className="timeline" id="timeline" aria-label="Timeline">
       <aside className="timeline__rail" aria-hidden="true">
         <div className="timeline__sticky">
-          <p className="timeline__sheet">Sheet 01 of 06 · The route</p>
           <YearCounter value={current.year} />
           <p className="timeline__place" key={current.id}>{current.place}</p>
           <ol className="timeline__index">
@@ -81,14 +77,12 @@ export default function Timeline({ chapters }) {
             >
               <span className="chapter__node" aria-hidden="true" />
               <p className="chapter__year">{c.year}</p>
-              <p className="chapter__waypoint">
-                <span>Waypoint {String(i + 1).padStart(2, '0')}</span>
-                <span>Elev. {c.elevation} m</span>
-                <span>{c.coords ? formatCoords(c.coords) : 'You are here'}</span>
-              </p>
               <h2 className="chapter__title">{c.title}</h2>
               <p className="chapter__role">{c.role}</p>
-              <p className="chapter__dates">{c.dates}</p>
+              <p className="chapter__dates">
+                {c.dates}
+                {typeof c.year === 'number' && `, ${c.place}`}
+              </p>
               <div className="chapter__body">
                 {c.body.map((para) => (
                   <p key={para.slice(0, 24)}>{para}</p>
@@ -116,11 +110,6 @@ export default function Timeline({ chapters }) {
                   ))}
                 </p>
               )}
-              <ul className="chapter__tags" aria-label="Topics">
-                {c.tags.map((t) => (
-                  <li key={t}>{t}</li>
-                ))}
-              </ul>
             </article>
           )
         })}

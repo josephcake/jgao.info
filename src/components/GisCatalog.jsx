@@ -191,7 +191,7 @@ export default function GisCatalog() {
   const active = selected && catalog.find((r) => r.key === selected)
 
   return (
-    <figure ref={ref} className="gis" id="gis">
+    <figure ref={ref} className="gis" id="gis" data-ui>
       <div className="gis__bar">
         <button type="button" className="gis__crawl" onClick={crawl} disabled={running}>
           {running ? 'Crawling…' : step ? 'Crawl again' : 'Start crawl'}

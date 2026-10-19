@@ -415,7 +415,7 @@ export default function RadarScope() {
   }
 
   return (
-    <figure className="radar" id="radar">
+    <figure className="radar" id="radar" data-ui>
       <div className="radar__bar">
         <span className="radar__bar-label">Color points by</span>
         <div className="segmented segmented--small" role="group" aria-label="Color points by">

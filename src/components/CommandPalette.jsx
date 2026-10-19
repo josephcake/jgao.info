@@ -63,6 +63,7 @@ export default function CommandPalette({ open, onClose, commands }) {
       {open && (
         <motion.div
           className="palette"
+          data-ui
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

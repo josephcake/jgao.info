@@ -21,7 +21,6 @@ export const chapters = [
   {
     id: 'court',
     elevation: 140,
-    coords: [40.7896, -73.9619],
     year: 2016,
     place: 'Central Park, New York',
     title: 'On the court',
@@ -37,7 +36,6 @@ export const chapters = [
   {
     id: 'first-commits',
     elevation: 260,
-    coords: [40.6782, -73.9442],
     year: 2018,
     place: 'Brooklyn, New York',
     title: 'First commits',
@@ -54,7 +52,6 @@ export const chapters = [
   {
     id: 'shipping',
     elevation: 400,
-    coords: [40.7128, -74.006],
     year: 2019,
     place: 'New York',
     title: 'Shipping small things',
@@ -71,7 +68,6 @@ export const chapters = [
   {
     id: 'rapidsos',
     elevation: 340,
-    coords: [40.7128, -74.006],
     year: 2020,
     place: 'New York',
     title: 'Maps for 9-1-1',
@@ -93,7 +89,6 @@ export const chapters = [
   {
     id: 'founder',
     elevation: 780,
-    coords: [38.9072, -77.0369],
     year: 2026,
     place: 'Washington',
     title: 'Building my own',
@@ -108,7 +103,6 @@ export const chapters = [
   {
     id: 'now',
     elevation: 900,
-    coords: null,
     year: 'Now',
     place: 'Home',
     title: 'Making time for what matters',
@@ -147,14 +141,6 @@ export const projects = [
       'Finds GIS services across sources, normalizes their metadata, and stores it in Redis.',
     demo: 'gis',
   },
-]
-
-export const principles = [
-  { title: 'Think in systems', text: 'Build foundations, not one-off features.' },
-  { title: 'Build for reuse', text: 'Modular pieces that grow with the product.' },
-  { title: 'Make complexity intuitive', text: 'Use visualization to make hard things easy.' },
-  { title: 'Stay curious', text: 'Learn by building, not just reading.' },
-  { title: 'Understand the user', text: 'Know the person you are building for.' },
 ]
 
 export const toolbox = [

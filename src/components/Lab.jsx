@@ -19,7 +19,6 @@ export default function Lab({ projects }) {
     <section className="section lab" id="lab" aria-labelledby="lab-title">
       <div className="section__head">
         <div>
-          <p className="section__sheet">Sheet 03 of 06</p>
           <h2 id="lab-title" className="section__title">On the workbench</h2>
         </div>
         <p className="section__lede">

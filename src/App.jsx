@@ -3,14 +3,14 @@ import Terrain from './components/Terrain'
 import Hero from './components/Hero'
 import Timeline from './components/Timeline'
 import Lab from './components/Lab'
-import Principles from './components/Principles'
+import Toolbox from './components/Toolbox'
 import Scoreboard from './components/Scoreboard'
 import GitHubActivity from './components/GitHubActivity'
 import Connect from './components/Connect'
 import ThemeSwitch from './components/ThemeSwitch'
 import CommandPalette from './components/CommandPalette'
 import DuckToast from './components/DuckToast'
-import { chapters, links, principles, projects, toolbox } from './data'
+import { chapters, links, projects, toolbox } from './data'
 import { POND_THEME, THEMES, applyTheme, currentTheme, themeBefore } from './lib/theme'
 import { DUCK_SPOTS, resetDucks, useDucks } from './lib/ducks'
 
@@ -24,6 +24,7 @@ const isTyping = (el) => el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAR
 export default function App() {
   const [theme, setTheme] = useState(currentTheme)
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [pastHero, setPastHero] = useState(false)
   const ducks = useDucks()
   const themes = useMemo(
     () => (ducks.length === DUCK_SPOTS.length || theme === POND_THEME.id ? [...THEMES, POND_THEME] : THEMES),
@@ -41,6 +42,16 @@ export default function App() {
       window.dispatchEvent(new CustomEvent('duck:offer-reset', { detail: back.name }))
     }
   }
+
+  useEffect(() => {
+    const name = document.querySelector('.hero__name')
+    if (!name) return
+    const io = new IntersectionObserver(([entry]) => setPastHero(!entry.isIntersecting), {
+      rootMargin: '-72px 0px 0px 0px',
+    })
+    io.observe(name)
+    return () => io.disconnect()
+  }, [])
 
   useEffect(() => {
     const onKey = (e) => {
@@ -62,13 +73,13 @@ export default function App() {
         id: `chapter-${c.id}`,
         group: 'Jump to',
         label: `${c.year}: ${c.title}`,
-        keywords: `${c.role} ${c.place}`,
+        keywords: `${c.role} ${c.place} ${c.tags.join(' ')}`,
         run: () => scrollToId(`chapter-${c.id}`),
       })),
       { id: 'go-scoreboard', group: 'Jump to', label: 'The scoreboard', keywords: 'stats numbers highlights achievements', run: () => scrollToId('scoreboard') },
       { id: 'go-lab', group: 'Jump to', label: 'On the workbench', keywords: 'projects sensors terrin', run: () => scrollToId('lab') },
       { id: 'go-github', group: 'Jump to', label: 'GitHub activity', keywords: 'contributions commits josephcake jgaosos', run: () => scrollToId('github') },
-      { id: 'go-principles', group: 'Jump to', label: 'How I work', keywords: 'principles skills toolbox', run: () => scrollToId('principles') },
+      { id: 'go-tools', group: 'Jump to', label: 'What I reach for', keywords: 'tools skills toolbox stack', run: () => scrollToId('tools') },
       { id: 'go-contact', group: 'Jump to', label: 'Say hello', keywords: 'contact', run: () => scrollToId('contact') },
       {
         id: 'demo-dispatch',
@@ -128,14 +139,15 @@ export default function App() {
 
   return (
     <>
+      <a className="skip" href="#main">Skip to content</a>
       <Terrain />
       <nav className="nav" aria-label="Sections">
-        <a className="nav__home" href="#top">Joseph Gao</a>
+        <a className={`nav__home ${pastHero ? 'is-shown' : ''}`} href="#top">Joseph Gao</a>
         <div className="nav__links">
           <a href="#timeline">Timeline</a>
           <a href="#lab">Workbench</a>
           <a href="#github">GitHub</a>
-          <a href="#principles">How I work</a>
+          <a href="#tools">Tools</a>
           <a href="#contact">Contact</a>
         </div>
         <div className="nav__tools">
@@ -145,15 +157,15 @@ export default function App() {
           </button>
         </div>
       </nav>
-      <main>
+      <main id="main">
         <Hero />
         <Timeline chapters={chapters} />
         <Scoreboard />
         <Lab projects={projects} />
         <GitHubActivity />
-        <Principles principles={principles} toolbox={toolbox} />
+        <Toolbox toolbox={toolbox} />
       </main>
-      <Connect />
+      <Connect chapters={chapters} />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} commands={commands} />
       <DuckToast onTryPond={() => changeTheme(POND_THEME.id)} />
     </>

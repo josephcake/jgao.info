@@ -206,6 +206,14 @@ function HouseFly() {
   )
 }
 
+function Heart() {
+  return (
+    <svg viewBox="0 0 16 14">
+      <path d="M8 13.5 1.6 7.3A3.9 3.9 0 0 1 8 2.4a3.9 3.9 0 0 1 6.4 4.9Z" />
+    </svg>
+  )
+}
+
 function PetHand() {
   return (
     <svg className="happy__pet-svg" viewBox="0 0 32 60" aria-hidden="true">
@@ -1269,9 +1277,9 @@ export default function Happy() {
         </span>
         <span className="happy__alert" aria-hidden="true">!</span>
         <span className="happy__hearts" aria-hidden="true">
-          <span>♥</span>
-          <span>♥</span>
-          <span>♥</span>
+          <Heart />
+          <Heart />
+          <Heart />
         </span>
         <span className="happy__zzz" aria-hidden="true">
           <span>z</span>

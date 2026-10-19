@@ -1,25 +1,11 @@
 import { useMemo } from 'react'
 import { motion, useTransform } from 'motion/react'
+import { elevationAt, wiggle } from '../lib/elevation'
 
 const W = 260
 const H = 104
 const PAD_TOP = 10
 const PAD_BOTTOM = 22
-
-// Cosine-smoothed climb through each chapter, with a little trail texture.
-function elevationAt(x, stops) {
-  if (x <= stops[0].x) return stops[0].e
-  for (let i = 0; i < stops.length - 1; i++) {
-    const a = stops[i]
-    const b = stops[i + 1]
-    if (x <= b.x) {
-      const t = (x - a.x) / (b.x - a.x || 1)
-      const s = (1 - Math.cos(t * Math.PI)) / 2
-      return a.e + (b.e - a.e) * s
-    }
-  }
-  return stops[stops.length - 1].e
-}
 
 export default function Profile({ chapters, positions, progress, active }) {
   const { line, area, sample, stops } = useMemo(() => {
@@ -28,10 +14,7 @@ export default function Profile({ chapters, positions, progress, active }) {
       e: c.elevation / 10,
     }))
     const toY = (e) => H - PAD_BOTTOM - (e / 100) * (H - PAD_TOP - PAD_BOTTOM)
-    const sample = (x) => {
-      const wiggle = Math.sin(x * 47) * 1.6 + Math.sin(x * 113) * 0.9
-      return toY(elevationAt(x, stops) + wiggle)
-    }
+    const sample = (x) => toY(elevationAt(x, stops) + wiggle(x))
     const pts = []
     for (let i = 0; i <= 120; i++) {
       const x = i / 120

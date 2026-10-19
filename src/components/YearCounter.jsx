@@ -12,7 +12,7 @@ export default function YearCounter({ value }) {
           <span className="year__slot" key={i}>
             <span className="year__strip" style={{ transform: `translateY(${-d * 10}%)` }}>
               {DIGITS.map((n) => (
-                <span key={n}>{n}</span>
+                <span key={n} data-n={n} />
               ))}
             </span>
           </span>

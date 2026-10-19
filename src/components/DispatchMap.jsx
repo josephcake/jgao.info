@@ -963,7 +963,7 @@ export default function DispatchMap() {
   }
 
   return (
-    <figure className="dispatch" id="dispatch">
+    <figure className="dispatch" id="dispatch" data-ui>
       <div className="dispatch__map" ref={wrapRef}>
         <canvas
           ref={canvasRef}

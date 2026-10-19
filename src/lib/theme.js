@@ -26,9 +26,15 @@ export function themeBefore(theme, themes) {
   return themes.find((t) => t.id === (theme === THEMES[0].id ? 'night' : THEMES[0].id))
 }
 
+export function syncThemeColor() {
+  const paper = getComputedStyle(document.documentElement).getPropertyValue('--paper').trim()
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', paper)
+}
+
 export function applyTheme(id) {
   const prev = currentTheme()
   document.documentElement.dataset.theme = id
+  syncThemeColor()
   try {
     if (prev !== id) localStorage.setItem('theme-last', prev)
     localStorage.setItem('theme', id)

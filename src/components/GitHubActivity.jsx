@@ -147,7 +147,6 @@ export default function GitHubActivity() {
     <section className="section github" id="github" aria-labelledby="github-title">
       <div className="section__head">
         <div>
-          <p className="section__sheet">Sheet 04 of 06</p>
           <h2 id="github-title" className="section__title">On GitHub</h2>
         </div>
         <p className="section__lede">
