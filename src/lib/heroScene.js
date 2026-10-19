@@ -15,6 +15,7 @@ const ISLAND = [[-330, 1700], [-250, 2100], [60, 2150], [340, 1500], [420, 200],
 const BROADWAY = [[260, 2150], [40, 1300], [-120, 470], [-200, -400], [-260, -1500]]
 const RALLY = 1100
 
+
 const TOWER = { k: 6, m: -2, floors: 40, floor: 23, height: 300, width: 40 }
 const T0 = { u: AVENUES[TOWER.k] + 7, v: TOWER.m * STREET + 4 }
 const DEPTH = STREET - 8
@@ -57,6 +58,40 @@ const hash = (i, j) => {
   const x = Math.sin(i * 127.1 + j * 311.7) * 43758.5453
   return x - Math.floor(x)
 }
+
+// Central Park landmarks in local units: v runs north (−) to south (+), 59th Street at v = 450
+const street = (n) => 450 - (n - 59) * 17.6
+const blob = (cu, cv, ru, rv, wob = 0, n = 28) =>
+  Array.from({ length: n }, (_, i) => {
+    const a = (i / n) * Math.PI * 2
+    const r = 1 + wob * (Math.sin(a * 3 + 1.3) * 0.6 + Math.sin(a * 5 + 0.4) * 0.4)
+    return [cu + Math.cos(a) * ru * r, cv + Math.sin(a) * rv * r]
+  })
+const RESERVOIR = blob(-4, (street(86) + street(96)) / 2 + 6, 86, 76, 0.06)
+const GREAT_LAWN = blob(-14, (street(80) + street(85)) / 2, 40, 42, 0, 24)
+const MEER = blob(58, street(107), 42, 18, 0.12)
+const LAKE = blob(-34, street(75), 46, 26, 0.22, 36)
+const POND = blob(52, street(61), 26, 13, 0.15)
+// 79th sits on a grid street so the dispatch route can cross the park along it
+const CROSSING = 3 * STREET
+const TRANSVERSE = [street(65), CROSSING, street(86), street(97)]
+const inBlob = (u, v, [cu, cv, ru, rv]) => ((u - cu) / ru) ** 2 + ((v - cv) / rv) ** 2 < 1
+const OPEN = [
+  [-4, (street(86) + street(96)) / 2 + 6, 96, 86],
+  [-14, (street(80) + street(85)) / 2, 46, 48],
+  [58, street(107), 50, 26],
+  [-34, street(75), 58, 34],
+  [52, street(61), 32, 18],
+]
+const TREES = []
+for (let i = 0; i < 2400; i++) {
+  const u = (hash(i, 21) - 0.5) * 206
+  const v = (hash(i, 22) - 0.5) * 870
+  if (OPEN.some((o) => inBlob(u, v, o)) || TRANSVERSE.some((t) => Math.abs(v - t) < 6)) continue
+  if (Math.abs(Math.abs(u) - 92) < 5 || Math.abs(Math.abs(v) - 422) < 5) continue
+  TREES.push([u, v, 0.9 + hash(i, 23) * 1.4])
+}
+const DRIVE = [[-92, 422], [-92, -400], [-70, -422], [70, -422], [92, -400], [92, 400], [70, 422], [-70, 422]]
 
 // Monotone cubic through the keys, so the camera never overshoots a key and never stops dead between
 // two keys that are heading the same way.
@@ -296,6 +331,9 @@ export function createScene() {
         land,
         block: mix(land, ink, 0.1),
         park: mix(land, colors['contour-strong'], 0.45),
+        tree: mix(mix(land, colors['contour-strong'], 0.45), ink, 0.14),
+        lawn: mix(land, colors['contour-strong'], 0.2),
+        water: mix(land, signal, 0.28),
         faces: [mix(paper, ink, 0.17), mix(paper, ink, 0.1), mix(paper, ink, 0.02), mix(paper, ink, 0.06)],
         cut: mix(paper, ink, 0.72),
         core: [mix(paper, ink, 0.3), mix(paper, ink, 0.24), mix(paper, ink, 0.16), mix(paper, ink, 0.2)],
@@ -425,12 +463,41 @@ export function createScene() {
       g.beginPath()
       path([[-PARK.u + 7, -PARK.v + 4], [PARK.u - 7, -PARK.v + 4], [PARK.u - 7, PARK.v - 4], [-PARK.u + 7, PARK.v - 4]], true)
       g.fill()
+
+      // Central Park, recognisable by its own landmarks: tree cover, the drive loop and transverse
+      // roads, the Great Lawn, the Reservoir and the Harlem Meer
+      g.fillStyle = tones.tree
+      g.beginPath()
+      for (const [u, v, r] of TREES) {
+        const q = at(u, v)
+        if (!q) continue
+        g.moveTo(q[0] + r * zs, q[1])
+        g.arc(q[0], q[1], r * zs, 0, Math.PI * 2)
+      }
+      g.fill()
+      g.fillStyle = tones.lawn
+      g.beginPath()
+      path(GREAT_LAWN, true)
+      g.fill()
+      g.fillStyle = tones.water
+      g.beginPath()
+      path(RESERVOIR, true)
+      path(MEER, true)
+      path(LAKE, true)
+      path(POND, true)
+      g.fill()
+      g.strokeStyle = tones.land
+      g.lineWidth = 3 * zs
+      g.beginPath()
+      path(DRIVE, true)
+      for (const v of TRANSVERSE) path([[-PARK.u + 7, v], [PARK.u - 7, v]])
+      g.stroke()
+
       g.strokeStyle = tones.land
       g.lineWidth = 9 * zs
       g.beginPath()
       path(BROADWAY)
       g.stroke()
-      tag(at(0, -300), [['Central Park', 600, 15, colors.ink]], window4(p, 0.37, 0.4, 0.52, 0.55), 0)
     }
 
     // The court: the contours settle into its outline, it inks in as lines, then the lines fade back
@@ -582,7 +649,13 @@ export function createScene() {
     // A 9-1-1 call and the unit routed along the grid to it
     const call = window4(p, 0.41, 0.44, 0.53, 0.56)
     if (call > 0) {
-      const legs = [[AVENUES[2], 12 * STREET], [AVENUES[2], 2 * STREET], [AVENUES[4], 2 * STREET], [AVENUES[4], -2 * STREET], [tu, -2 * STREET]]
+      const legs = [
+        [AVENUES[2], 12 * STREET],
+        [AVENUES[2], CROSSING],
+        [AVENUES[6], CROSSING],
+        [AVENUES[6], -2 * STREET],
+        [tu, -2 * STREET],
+      ]
       const lens = legs.slice(1).map((q, i) => Math.hypot(q[0] - legs[i][0], q[1] - legs[i][1]))
       let left = smooth(0.43, 0.51, p) * lens.reduce((x, y) => x + y, 0)
       const run = [legs[0]]
