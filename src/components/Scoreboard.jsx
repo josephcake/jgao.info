@@ -34,7 +34,7 @@ const STATS = [
   {
     value: THEMES.length,
     unit: 'custom themes',
-    text: 'on this site, down to the contour lines. Rumor has it there is a sixth.',
+    text: `on this site, down to the contour lines. Rumor has it there is a ${['first', 'second', 'third', 'fourth', 'fifth', 'sixth'][THEMES.length]}.`,
   },
   {
     value: repoCount,

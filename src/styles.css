@@ -388,7 +388,7 @@ main,
 /* Hero */
 .hero {
   position: relative;
-  height: 720svh;
+  height: 770svh;
   margin-bottom: -40svh;
 }
 
@@ -1289,7 +1289,7 @@ main,
 /* Toolbox */
 .toolbox__list {
   display: grid;
-  gap: 32px;
+  gap: 20px;
 }
 
 .toolbox__row {

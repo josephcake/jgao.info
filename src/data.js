@@ -144,24 +144,8 @@ export const projects = [
 ]
 
 export const toolbox = [
-  {
-    group: 'Frontend',
-    items: ['React', 'Next.js', 'TypeScript', 'JavaScript', 'Design systems', 'Data visualization'],
-  },
-  {
-    group: 'Geospatial',
-    items: ['Google Maps Platform', 'Esri ArcGIS', 'Mapbox', 'MapLibre', 'deck.gl'],
-  },
-  {
-    group: 'Backend',
-    items: ['Node.js', 'Vite', 'MongoDB Atlas', 'Redis', 'Vercel', 'Fly.io'],
-  },
-  {
-    group: 'Hardware and sensors',
-    items: ['Raspberry Pi', 'mmWave radar', 'Infrared sensing', 'Object tracking', 'Signal processing', 'Sensor fusion'],
-  },
-  {
-    group: 'Business',
-    items: ['Product strategy', 'Sales', 'Customer relationships', 'Coaching'],
-  },
+  { group: 'Web development', items: ['React', 'Next.js', 'TypeScript', 'Node.js', 'MongoDB', 'Redis'] },
+  { group: 'Maps and GIS', items: ['Google Maps', 'Esri ArcGIS', 'Mapbox', 'deck.gl'] },
+  { group: 'Hardware', items: ['Raspberry Pi', 'Radar and infrared sensors'] },
+  { group: 'Business', items: ['Product strategy', 'Sales', 'Client relationships', 'Coaching'] },
 ]

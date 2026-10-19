@@ -3,10 +3,10 @@ export default function Toolbox({ toolbox }) {
     <section className="section toolbox" id="tools" aria-labelledby="tools-title">
       <div className="section__head">
         <div>
-          <h2 id="tools-title" className="section__title">What I reach for</h2>
+          <h2 id="tools-title" className="section__title">An <span className="nowrap">AI-forward</span> builder</h2>
         </div>
         <p className="section__lede">
-          A computer science degree to start. Everything since, learned by shipping.
+          Computer science degree. Everything since, learned on the job.
         </p>
       </div>
 

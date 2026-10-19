@@ -49,6 +49,8 @@ export default function Terrain() {
     let field = new Float32Array(0)
     let frame = 0
     let lastDraw = 0
+    let lastTick = 0
+    let story = null
     let dirty = true
     const grid = { x0: 0, y0: 0, cell: CELL }
     const cam = { zoom: 1, fx: 0, fy: 0, fz: 0, sin: 0, cos: 1, ys: 0, yc: 1, fd: 1, cx: 0, cy: 0 }
@@ -103,13 +105,14 @@ export default function Terrain() {
       return projectPlane(u, v, (z - cam.fz) * cam.zoom) ? [P[0], P[1]] : null
     }
 
-    const sample = (time, after, t, court) => {
+    const sample = (time, after, t, ground) => {
+      const court = ground?.box
       const z = time * 0.000035 + after * 0.00035
       const drift = after * 0.25
       const cell = CELL * (1 + 0.5 * t)
       grid.cell = cell
       const ox = Math.abs(cam.cx - width / 2)
-      const above = cam.fz - (court ? court.z : 0)
+      const above = cam.fz - (ground ? ground.z : 0)
       const oy = Math.max(0, cam.cy - height * 0.62) + Math.min(height * 1.2, Math.max(0, above) * cam.zoom * 1.2)
       grid.x0 = -(width * 0.5 + ox) * t
       grid.y0 = -(height * 1.6 + oy) * t
@@ -208,9 +211,16 @@ export default function Terrain() {
       pointer.strength += (pointer.target - pointer.strength) * 0.05
       if (reduceMotion && !dirty) return
       const scroll = window.scrollY
-      const p = reduceMotion || pinLen <= 0 ? 1 : clamp01(scroll / pinLen)
+      const target = reduceMotion || pinLen <= 0 ? 1 : clamp01(scroll / pinLen)
+      // The story trails the scroll a little, so a hard flick glides instead of jumping the camera
+      const step = Math.min(1, (time - (lastTick || time)) / 1000)
+      lastTick = time
+      story = story === null || reduceMotion ? target : story + (target - story) * (1 - Math.exp(-step / 0.15))
+      if (Math.abs(target - story) < 0.0002) story = target
+      if (story !== target) dirty = true
+      const p = story
       const after = Math.max(0, scroll - (reduceMotion ? 0 : pinLen))
-      const pinned = p > 0 && p < 1
+      const pinned = !reduceMotion && pinLen > 0 && p < 1
       if (time - lastDraw < (pinned ? 16 : 32)) return
       lastDraw = time
       dirty = false
@@ -238,7 +248,7 @@ export default function Terrain() {
       sample(reduceMotion ? 0 : time, after, t, ground)
       ctx.clearRect(0, 0, width, height)
       drawContours(view, t, after, ground ? ground.z : 0)
-      if (pinned) scene.draw(ctx, { p, time, pt, cam: view, colors })
+      if (pinned) scene.draw(ctx, { p, time, pt, cam: view, colors, rise: RISE })
     }
 
     const onPointerMove = (e) => {

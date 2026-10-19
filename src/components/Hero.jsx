@@ -8,12 +8,15 @@ import NameScan from './NameScan'
 const NAME = ['Joseph', 'Gao']
 const ease = [0.22, 1, 0.36, 1]
 const ACTS = [
-  { at: [0.12, 0.16, 0.28, 0.31], title: 'It started on a tennis court.' },
-  { at: [0.36, 0.4, 0.5, 0.53], title: 'Then I built maps for 9-1-1.' },
-  { at: [0.53, 0.56, 0.62, 0.65], title: 'Street by street, to the door.' },
-  { at: [0.65, 0.68, 0.75, 0.78], title: 'Inside, every exit and stairwell.' },
-  { at: [0.78, 0.81, 0.9, 0.93], title: 'Up to the caller’s floor.' },
-  { at: [0.94, 0.97, 1.07, 1.1], title: 'After hours, I wire sensors.' },
+  { at: [0.1, 0.13, 0.22, 0.25], title: 'It started in New York.' },
+  { at: [0.25, 0.28, 0.37, 0.4], title: 'I map cities in 3D for 9-1-1.' },
+  { at: [0.41, 0.44, 0.48, 0.5], title: 'A call comes in.' },
+  { at: [0.5, 0.52, 0.57, 0.59], title: 'The scan reads every floor.' },
+  { at: [0.6, 0.62, 0.76, 0.78], title: 'From the lobby up to 23.' },
+  { at: [0.79, 0.81, 0.86, 0.88], title: 'Sensors find who’s inside.' },
+  { at: [0.88, 0.9, 0.975, 1.005], title: 'Then I guide responders in.' },
+  { at: [1.015, 1.045, 1.135, 1.165], title: 'Every building, mapped.' },
+  { at: [1.175, 1.205, 1.265, 1.3], title: 'Now I build my own.' },
 ]
 
 function Act({ progress, at: [a, b, c, d], title }) {

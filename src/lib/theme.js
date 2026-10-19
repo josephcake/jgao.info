@@ -1,9 +1,9 @@
 export const THEMES = [
   { id: 'survey', name: 'Survey' },
   { id: 'night', name: 'Night shift' },
-  { id: 'hardcourt', name: 'Hardcourt' },
-  { id: 'clay', name: 'Roland Garros' },
-  { id: 'grass', name: 'Wimbledon' },
+  // { id: 'hardcourt', name: 'Hardcourt' },
+  // { id: 'clay', name: 'Roland Garros' },
+  // { id: 'grass', name: 'Wimbledon' },
 ]
 
 export const POND_THEME = { id: 'pond', name: 'Duck pond' }

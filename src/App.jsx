@@ -79,7 +79,7 @@ export default function App() {
       { id: 'go-scoreboard', group: 'Jump to', label: 'The scoreboard', keywords: 'stats numbers highlights achievements', run: () => scrollToId('scoreboard') },
       { id: 'go-lab', group: 'Jump to', label: 'On the workbench', keywords: 'projects sensors terrin', run: () => scrollToId('lab') },
       { id: 'go-github', group: 'Jump to', label: 'GitHub activity', keywords: 'contributions commits josephcake jgaosos', run: () => scrollToId('github') },
-      { id: 'go-tools', group: 'Jump to', label: 'What I reach for', keywords: 'tools skills toolbox stack', run: () => scrollToId('tools') },
+      { id: 'go-tools', group: 'Jump to', label: 'Skills', keywords: 'tools skills toolbox stack ai builder', run: () => scrollToId('tools') },
       { id: 'go-contact', group: 'Jump to', label: 'Say hello', keywords: 'contact', run: () => scrollToId('contact') },
       {
         id: 'demo-dispatch',
@@ -148,7 +148,7 @@ export default function App() {
           <a href="#timeline">Timeline</a>
           <a href="#lab">Workbench</a>
           <a href="#github">GitHub</a>
-          <a href="#tools">Tools</a>
+          <a href="#tools">Skills</a>
           <a href="#contact">Contact</a>
         </div>
         <div className="nav__tools">
