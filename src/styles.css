@@ -906,6 +906,7 @@ main,
 /* Lab */
 .lab {
   --lab-gap: clamp(16px, 3vw, 40px);
+  --lab-pad: clamp(14px, 2vw, 28px);
 }
 
 .lab__list {
@@ -913,10 +914,30 @@ main,
   gap: 4px;
 }
 
+/* The open project sits on its own panel, a step of tone out from the page; the others step back */
+.lab__item {
+  margin-inline: calc(var(--lab-pad) * -1);
+  padding-inline: var(--lab-pad);
+  border-radius: 18px;
+  transition: background-color 0.45s var(--ease), opacity 0.45s var(--ease);
+}
+
+.lab__item.is-open {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.lab__list:has(.is-open) .lab__item:not(.is-open) {
+  opacity: 0.6;
+}
+
+.lab__list:has(.is-open) .lab__item:not(.is-open):hover {
+  opacity: 1;
+}
+
 .lab__row {
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(200px, 0.85fr) minmax(0, 1.25fr) 140px 24px;
+  grid-template-columns: minmax(200px, 0.85fr) minmax(0, 1.25fr) 140px 36px;
   gap: var(--lab-gap);
   align-items: baseline;
   padding: 26px 0;
@@ -956,29 +977,39 @@ main,
 
 .lab__toggle {
   position: relative;
-  width: 16px;
-  height: 16px;
+  width: 36px;
+  height: 36px;
   align-self: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ink) 9%, transparent);
+  color: var(--ink);
+  transition: background-color 0.3s, color 0.3s, transform 0.45s var(--ease);
+}
+
+.lab__row:hover .lab__toggle {
+  background: color-mix(in srgb, var(--ink) 16%, transparent);
 }
 
 .lab__toggle::before,
 .lab__toggle::after {
   content: '';
   position: absolute;
-  left: 0;
-  top: 7px;
-  width: 16px;
+  left: 11px;
+  top: 17px;
+  width: 14px;
   height: 2px;
-  background: var(--ink);
-  transition: transform 0.45s var(--ease);
+  border-radius: 1px;
+  background: currentColor;
 }
 
 .lab__toggle::after {
   transform: rotate(90deg);
 }
 
-.lab__item.is-open .lab__toggle::after {
-  transform: rotate(0deg);
+.lab__item.is-open .lab__toggle {
+  background: var(--signal);
+  color: var(--paper);
+  transform: rotate(45deg);
 }
 
 .lab__panel {
@@ -990,7 +1021,7 @@ main,
   gap: 14px;
   justify-items: start;
   max-width: 62ch;
-  margin-left: calc((100% - 164px - 3 * var(--lab-gap)) * 0.405 + var(--lab-gap));
+  margin-left: calc((100% - 176px - 3 * var(--lab-gap)) * 0.405 + var(--lab-gap));
   padding: 0 0 30px;
   color: var(--muted);
 }
@@ -3426,7 +3457,7 @@ body::after {
   }
 
   .lab__row {
-    grid-template-columns: minmax(0, 1fr) 24px;
+    grid-template-columns: minmax(0, 1fr) 36px;
     gap: 6px 16px;
   }
 
