@@ -38,26 +38,27 @@ export default function NameScan() {
       }
     }
 
-    const setFont = (g) => {
-      g.font = `condensed 700 ${size}px ${getComputedStyle(h1).fontFamily}`
-      if ('fontStretch' in g) g.fontStretch = 'condensed'
+    // Each letter in its own style, so the italic word is drawn italic
+    const setFont = (g, el) => {
+      const cs = getComputedStyle(el)
+      g.font = `${cs.fontStyle} ${cs.fontWeight} ${size}px ${cs.fontFamily}`
     }
 
-    // Some browsers (Safari) ignore the condensed width on canvas and would draw wide letters into
-    // the narrow slots, so the canvas only takes over when its glyphs match the page's
+    // The canvas only takes over when its glyphs match the page's, so a browser that draws the face
+    // differently keeps the plain letters
     const matches = () => {
-      setFont(sctx)
       const spacing = parseFloat(getComputedStyle(h1).letterSpacing) || 0
-      return [...h1.querySelectorAll('.hero__char')].every(
-        (el) => Math.abs(sctx.measureText(el.textContent).width + spacing - el.offsetWidth) < size * 0.06,
-      )
+      return [...h1.querySelectorAll('.hero__char')].every((el) => {
+        setFont(sctx, el)
+        return Math.abs(sctx.measureText(el.textContent).width + spacing - el.offsetWidth) < size * 0.06
+      })
     }
 
     const glyphs = (g, paint) => {
-      setFont(g)
       g.textBaseline = 'alphabetic'
       g.lineJoin = 'round'
       h1.querySelectorAll('.hero__char').forEach((el) => {
+        setFont(g, el)
         const m = g.measureText(el.textContent)
         const a = m.fontBoundingBoxAscent
         paint(

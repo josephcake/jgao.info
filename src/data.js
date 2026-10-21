@@ -92,10 +92,10 @@ export const chapters = [
     year: 2026,
     place: 'Washington',
     title: 'Building my own',
-    role: 'Creator, Terrin.io',
+    role: 'Side projects, alongside RapidSOS',
     dates: '2026',
     body: [
-      'My solo project, built to help people picture things that are hard to picture. I own all of it, from idea to ship.',
+      'I still work at RapidSOS. In my own time I build things for the fun of it, Terrin.io first among them: a place to help people picture things that are hard to picture.',
     ],
     tags: ['Product', 'Visualization', 'Architecture', 'Design'],
     artifact: 'loop',
@@ -116,10 +116,21 @@ export const chapters = [
   },
 ]
 
+// The line over the name on the landing, one moment of the timeline at a time; short is the
+// wording for a phone, where each has to fit on one line
+export const moments = [
+  { when: '2016', what: 'Coaching tennis in Central Park', where: 'New York' },
+  { when: '2018', what: 'Writing my first lines of code', where: 'Brooklyn' },
+  { when: '2019', what: 'Shipping frontends at Learning Economy', short: 'Shipping my first frontends', where: 'New York' },
+  { when: '2020', what: 'Building the maps 9-1-1 uses, at RapidSOS', short: 'Building maps for 9-1-1 at RapidSOS', where: 'New York' },
+  { when: '2026', what: 'Still at RapidSOS, and building my own projects for fun', short: 'Still at RapidSOS, building for fun', where: 'Washington' },
+  { when: 'Now', what: 'Husband, father, and Happy’s person', short: 'Husband, father, Happy’s person', where: 'Home' },
+]
+
 export const projects = [
   {
     name: 'Terrin.io',
-    kind: 'Solo project',
+    kind: 'Side project',
     summary: 'Making hard things easy to picture.',
     detail:
       'Where I try out the visualization ideas I care about most.',
@@ -151,9 +162,26 @@ export const projects = [
   },
 ]
 
-export const toolbox = [
-  { group: 'Web development', items: ['React', 'Next.js', 'TypeScript', 'Node.js', 'MongoDB', 'Redis'] },
-  { group: 'Maps and GIS', items: ['Google Maps', 'Esri ArcGIS', 'Mapbox', 'deck.gl'] },
-  { group: 'Hardware', items: ['Raspberry Pi', 'Radar and infrared sensors'] },
-  { group: 'Business', items: ['Product strategy', 'Sales', 'Client relationships', 'Coaching'] },
+// What I bring, each with something on the page that shows it
+export const strengths = [
+  {
+    title: 'Maps that find people',
+    body: 'Six years at RapidSOS building the maps 9-1-1 uses: a caller placed on the right floor, responders guided through the building, and two patents along the way.',
+    go: { label: 'Place a 9-1-1 call', to: 'dispatch' },
+  },
+  {
+    title: 'From sensor to screen',
+    body: 'Radar and infrared wired to a Raspberry Pi, and the readings carried all the way to an interface a person can read at a glance.',
+    go: { label: 'Get tracked by the sensor lab', to: 'radar' },
+  },
+  {
+    title: 'Building for the fun of it',
+    body: 'Alongside RapidSOS I build my own things, Terrin.io among them, to try an idea properly before I talk about it.',
+    go: { label: 'Open the workbench', to: 'lab' },
+  },
+  {
+    title: 'Listening first',
+    body: 'Coaching tennis taught me to understand the person across the net before I try to help them. I still work that way.',
+    go: { label: 'Back to the court', to: 'court' },
+  },
 ]

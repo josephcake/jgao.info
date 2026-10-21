@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 
-// On phones the themes move into the command menu instead
+// On phones the themes move into the command menu instead, unless always is set
 const COMPACT = '(max-width: 600px)'
 
-export default function ThemeSwitch({ themes, theme, back, onChange, onRepeat }) {
+export default function ThemeSwitch({ themes, theme, back, onChange, onRepeat, always = false }) {
   const [compact, setCompact] = useState(() => window.matchMedia(COMPACT).matches)
 
   useEffect(() => {
@@ -13,7 +13,7 @@ export default function ThemeSwitch({ themes, theme, back, onChange, onRepeat })
     return () => mq.removeEventListener('change', update)
   }, [])
 
-  if (compact) return null
+  if (compact && !always) return null
 
   return (
     <div className="theme-switch" role="group" aria-label="Color theme">

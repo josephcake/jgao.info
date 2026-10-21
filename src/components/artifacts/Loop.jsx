@@ -58,7 +58,7 @@ export default function Loop({ drawn }) {
           <text ref={lapRef} className="art-label" x="300" y="126" textAnchor="middle">Iteration 1</text>
         </g>
       </svg>
-      <figcaption>The job now: decide what to build, design it, ship it, learn, and go around again.</figcaption>
+      <figcaption>How I build on my own time: decide what to make, design it, ship it, learn, and go around again.</figcaption>
     </figure>
   )
 }

@@ -3,13 +3,13 @@ import Terrain from './components/Terrain'
 import Hero from './components/Hero'
 import Timeline from './components/Timeline'
 import Lab from './components/Lab'
-import Toolbox from './components/Toolbox'
+import Strengths from './components/Strengths'
 import Scoreboard from './components/Scoreboard'
 import GitHubActivity from './components/GitHubActivity'
 import Connect from './components/Connect'
-import ThemeSwitch from './components/ThemeSwitch'
+import SiteMenu from './components/SiteMenu'
 import CommandPalette from './components/CommandPalette'
-import { chapters, links, projects, toolbox } from './data'
+import { chapters, links, projects, strengths } from './data'
 import { THEMES, applyTheme, currentTheme, themeBefore } from './lib/theme'
 
 const scrollToId = (id, block = 'start') => {
@@ -22,7 +22,6 @@ const isTyping = (el) => el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAR
 export default function App() {
   const [theme, setTheme] = useState(currentTheme)
   const [paletteOpen, setPaletteOpen] = useState(false)
-  const [pastHero, setPastHero] = useState(false)
   const themes = THEMES
 
   const changeTheme = useCallback((id) => {
@@ -31,16 +30,6 @@ export default function App() {
   }, [])
   const back = useMemo(() => themeBefore(theme, themes), [theme, themes])
   const repeatTheme = () => changeTheme(back.id)
-
-  useEffect(() => {
-    const name = document.querySelector('.hero__name')
-    if (!name) return
-    const io = new IntersectionObserver(([entry]) => setPastHero(!entry.isIntersecting), {
-      rootMargin: '-72px 0px 0px 0px',
-    })
-    io.observe(name)
-    return () => io.disconnect()
-  }, [])
 
   useEffect(() => {
     const onKey = (e) => {
@@ -68,7 +57,7 @@ export default function App() {
       { id: 'go-scoreboard', group: 'Jump to', label: 'The scoreboard', keywords: 'stats numbers highlights achievements', run: () => scrollToId('scoreboard') },
       { id: 'go-lab', group: 'Jump to', label: 'On the workbench', keywords: 'projects sensors terrin', run: () => scrollToId('lab') },
       { id: 'go-github', group: 'Jump to', label: 'GitHub activity', keywords: 'contributions commits josephcake jgaosos', run: () => scrollToId('github') },
-      { id: 'go-tools', group: 'Jump to', label: 'Skills', keywords: 'tools skills toolbox stack ai builder', run: () => scrollToId('tools') },
+      { id: 'go-strengths', group: 'Jump to', label: 'What I bring', keywords: 'strengths skills maps sensors listening', run: () => scrollToId('strengths') },
       { id: 'go-contact', group: 'Jump to', label: 'Say hello', keywords: 'contact', run: () => scrollToId('contact') },
       {
         id: 'demo-dispatch',
@@ -130,29 +119,21 @@ export default function App() {
     <>
       <a className="skip" href="#main">Skip to content</a>
       <Terrain />
-      <nav className="nav" aria-label="Sections">
-        <a className={`nav__home ${pastHero ? 'is-shown' : ''}`} href="#top">Joseph Gao</a>
-        <div className="nav__links">
-          <a href="#timeline">Timeline</a>
-          <a href="#lab">Workbench</a>
-          <a href="#github">GitHub</a>
-          <a href="#tools">Skills</a>
-          <a href="#contact">Contact</a>
-        </div>
-        <div className="nav__tools">
-          <ThemeSwitch themes={themes} theme={theme} back={back} onChange={changeTheme} onRepeat={repeatTheme} />
-          <button type="button" className="nav__search" onClick={() => setPaletteOpen(true)}>
-            Menu <kbd>⌘K</kbd>
-          </button>
-        </div>
-      </nav>
+      <SiteMenu
+        themes={themes}
+        theme={theme}
+        back={back}
+        onTheme={changeTheme}
+        onRepeat={repeatTheme}
+        onSearch={() => setPaletteOpen(true)}
+      />
       <main id="main">
         <Hero />
         <Timeline chapters={chapters} />
         <Scoreboard />
         <Lab projects={projects} />
         <GitHubActivity />
-        <Toolbox toolbox={toolbox} />
+        <Strengths strengths={strengths} />
       </main>
       <Connect chapters={chapters} />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} commands={commands} />
