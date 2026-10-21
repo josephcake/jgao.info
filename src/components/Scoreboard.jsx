@@ -1,4 +1,3 @@
-import Duck from './Duck'
 import { useEffect, useRef } from 'react'
 import { animate, useInView } from 'motion/react'
 import contributions from '../contributions.json'
@@ -89,7 +88,6 @@ export default function Scoreboard() {
               <span className="scoreboard__unit">{s.unit}</span>
             </p>
             <p className="scoreboard__text">{s.text}</p>
-            {i === STATS.length - 1 && <Duck spot="scoreboard" />}
           </li>
         ))}
       </ol>

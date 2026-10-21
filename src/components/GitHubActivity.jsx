@@ -1,4 +1,3 @@
-import Duck from './Duck'
 import { useMemo, useRef, useState } from 'react'
 import { motion, useInView } from 'motion/react'
 import data from '../contributions.json'
@@ -283,7 +282,6 @@ export default function GitHubActivity() {
               </li>
             </ul>
           </div>
-          <Duck spot="calendar" />
         </div>
         <p className={`github__note ${mode === PERSONAL.handle ? 'is-off' : ''}`}>
           Work activity comes from my private calendar through {formatDate(Date.parse(`${ESTIMATED_AFTER}T00:00:00Z`))}.

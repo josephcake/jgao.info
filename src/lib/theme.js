@@ -6,8 +6,6 @@ export const THEMES = [
   // { id: 'grass', name: 'Wimbledon' },
 ]
 
-export const POND_THEME = { id: 'pond', name: 'Duck pond' }
-
 export function currentTheme() {
   return document.documentElement.dataset.theme || 'survey'
 }

@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { DUCK_SPOTS, isDuckFound } from '../lib/ducks'
 
 const DOG_W = 132
 const SCALE = DOG_W / 122
@@ -25,14 +24,12 @@ const EVENTS = [
   ['leaf', 0.08],
   ['dig', 0.07],
   ['shake', 0.06],
-  ['duck', 0.08],
   ['howl', 0.03],
 ]
 const BITS = 24
 const TAIL_X = 24
 const PAW_X = 88
 const HOWL_COOLDOWN_MS = 15000
-const HUNT_GAP_MS = 6000
 const PET_MS = 2600
 const HEAD_X = 106
 const HEAD_Y = 60
@@ -321,8 +318,6 @@ export default function Happy() {
       spray: 0,
       gas: 0,
       howledAt: -Infinity,
-      huntWait: 0,
-      celebrate: false,
       clock: 0,
       y: 0,
     }
@@ -333,31 +328,6 @@ export default function Happy() {
       s.bits.push({ kind, x, y, vx, vy, life, max: life })
     }
     const pawX = () => (s.dir === 1 ? s.x + PAW_X * SCALE : s.x + DOG_W - PAW_X * SCALE)
-    const duckAt = (id) => {
-      if (isDuckFound(id)) return null
-      const duck = document.querySelector(`.duck--${id}`)
-      if (!duck) return null
-      const r = duck.getBoundingClientRect()
-      return { el: duck, id, x: r.left - el.track.getBoundingClientRect().left + r.width / 2 }
-    }
-    const footerDuck = () => duckAt('footer')
-    const lastDuck = () => {
-      const left = DUCK_SPOTS.filter((id) => !isDuckFound(id))
-      return left.length === 1 ? left[0] : null
-    }
-    const startHunt = () => {
-      const duck = duckAt(lastDuck())
-      if (!duck) {
-        s.huntWait = HUNT_GAP_MS
-        return
-      }
-      s.duck = duck
-      s.duckDir = duck.x > center() ? 1 : -1
-      s.tries = 0
-      s.spray = 0
-      s.rest = s.sniff = 0
-      enter('hunt', 'go')
-    }
     const minX = () => box.g0
     const maxX = () => Math.max(box.g0, box.g1 - DOG_W)
     const onLine = (x) => Math.min(maxX(), Math.max(minX(), x))
@@ -436,7 +406,7 @@ export default function Happy() {
     }
 
     const startEvent = () => {
-      const options = EVENTS.filter(([name]) => name !== s.last && (name !== 'duck' || footerDuck()))
+      const options = EVENTS.filter(([name]) => name !== s.last)
       const total = options.reduce((sum, [, w]) => sum + w, 0)
       let roll = Math.random() * total
       const [name] = options.find(([, w]) => (roll -= w) <= 0) || options[0]
@@ -467,11 +437,6 @@ export default function Happy() {
       } else if (name === 'howl') {
         s.howledAt = s.clock
         enter('howl', 'sit')
-      } else if (name === 'duck') {
-        const duck = footerDuck()
-        s.duck = duck
-        s.duckDir = duck.x > center() ? 1 : -1
-        enter('duck', 'go')
       } else if (name === 'zoomies') {
         enter('zoomies', 'bow')
         say('Arf!', 800)
@@ -498,8 +463,6 @@ export default function Happy() {
       s.bug = null
       s.leaf = null
       s.y = 0
-      s.duck?.el.classList.remove('is-noticed')
-      s.duck = null
       s.next = rand(5000, 9000)
       enter('walk')
     }
@@ -547,17 +510,8 @@ export default function Happy() {
           pose.walk = wander(dt, WALK)
           pose.sniff = s.sniff > 0
           s.next -= dt
-          s.huntWait -= dt
           if (s.rest <= 0) {
-            if (s.celebrate) {
-              s.celebrate = false
-              enter('zoomies', 'bow')
-              say('Arf!', 800)
-            } else if (s.huntWait <= 0 && lastDuck()) {
-              startHunt()
-            } else if (s.next <= 0) {
-              startEvent()
-            }
+            if (s.next <= 0) startEvent()
           }
         }
       } else if (s.mode === 'chase') {
@@ -764,73 +718,6 @@ export default function Happy() {
         } else {
           pose.wag = true
           if (s.t > 500) endEvent()
-        }
-      } else if (s.mode === 'duck') {
-        const d = s.duck
-        if (s.phase === 'go') {
-          const head = HEAD_X * SCALE
-          const target = onLine(s.duckDir === 1 ? d.x - head : d.x - DOG_W + head)
-          const arrived = moveToward(target, TROT, dt)
-          pose.walk = !arrived
-          pose.wag = true
-          if (arrived) {
-            s.dir = s.duckDir
-            d.el.classList.add('is-noticed')
-            say('Woof! Woof!', 1500)
-            setPhase('bark')
-          }
-        } else {
-          pose.wag = true
-          pose.sniff = Math.floor(s.t / 380) % 2 === 0
-          pose.catch = !pose.sniff
-          if (s.t > 2600) endEvent()
-        }
-      } else if (s.mode === 'hunt') {
-        const d = s.duck
-        const below = d.id === 'footer'
-        if (s.phase === 'go') {
-          const reach = (below ? PAW_X : HEAD_X) * SCALE
-          const target = onLine(s.duckDir === 1 ? d.x - reach : d.x - DOG_W + reach)
-          const arrived = moveToward(target, TROT, dt)
-          pose.walk = !arrived
-          pose.wag = true
-          if (arrived) {
-            s.dir = s.duckDir
-            d.el.classList.add('is-noticed')
-            if (below) s.mound = { x: pawX(), size: 0, life: 12000 }
-            say('Woof!', 800)
-            setPhase(below ? 'dig' : 'paw')
-          }
-        } else if (s.phase === 'dig') {
-          pose.dig = pose.wag = true
-          if (s.mound) s.mound.size = Math.min(1, (s.tries * 1500 + s.t) / 3000)
-          s.spray -= dt
-          if (s.spray <= 0) {
-            s.spray = 60
-            spawn('dirt', pawX() - s.dir * 6, 3, -s.dir * rand(90, 240), rand(120, 280), rand(600, 950))
-          }
-          if (s.t > 1500) setPhase('reach')
-        } else if (s.phase === 'reach' || s.phase === 'paw') {
-          pose.wag = true
-          if (s.phase === 'reach') pose.reach = true
-          else {
-            pose.pawUp = true
-            pose.alert = s.t < 600
-          }
-          if (s.t > 1400) {
-            s.tries += 1
-            if (s.tries >= 2) setPhase('rest')
-            else {
-              setPhase(below ? 'dig' : 'paw')
-              say('Woof!', 800)
-            }
-          }
-        } else {
-          pose.sniff = true
-          if (s.t > 900) {
-            s.huntWait = HUNT_GAP_MS
-            endEvent()
-          }
         }
       } else if (s.mode === 'zoomies') {
         if (s.phase === 'bow') {
@@ -1195,12 +1082,6 @@ export default function Happy() {
       render(step(dt))
       id = requestAnimationFrame(tick)
     }
-    const onDuckFound = (e) => {
-      if (e.detail.count < DUCK_SPOTS.length) return
-      if (s.mode === 'hunt') endEvent()
-      s.huntWait = 0
-      s.celebrate = true
-    }
     const onSiren = () => {
       if (!visible || s.mode !== 'walk' || s.clock - s.howledAt < HOWL_COOLDOWN_MS) return
       s.howledAt = s.clock
@@ -1209,7 +1090,6 @@ export default function Happy() {
       enter('howl', 'sit')
     }
     window.addEventListener('dispatch:siren', onSiren)
-    window.addEventListener('duck:found', onDuckFound)
 
     const observer = new IntersectionObserver(([entry]) => {
       cancelAnimationFrame(id)
@@ -1224,7 +1104,6 @@ export default function Happy() {
       observer.disconnect()
       cancelAnimationFrame(id)
       window.removeEventListener('dispatch:siren', onSiren)
-      window.removeEventListener('duck:found', onDuckFound)
     }
     // Refs are stable for the life of the component.
     // eslint-disable-next-line react-hooks/exhaustive-deps

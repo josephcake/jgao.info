@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import RadarScope from './RadarScope'
 import GisCatalog from './GisCatalog'
+import IndoorNav from './IndoorNav'
 
 const ease = [0.22, 1, 0.36, 1]
-const DEMOS = { radar: RadarScope, gis: GisCatalog }
+const DEMOS = { radar: RadarScope, gis: GisCatalog, indoor: IndoorNav }
 
 export default function Lab({ projects }) {
   const [open, setOpen] = useState(() => projects.findIndex((p) => p.demo))
@@ -21,9 +22,6 @@ export default function Lab({ projects }) {
         <div>
           <h2 id="lab-title" className="section__title">On the workbench</h2>
         </div>
-        <p className="section__lede">
-          Side projects. Open one to try it.
-        </p>
       </div>
 
       <ul className="lab__list">

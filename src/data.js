@@ -141,6 +141,14 @@ export const projects = [
       'Finds GIS services across sources, normalizes their metadata, and stores it in Redis. The crawler behind it is patented.',
     demo: 'gis',
   },
+  {
+    name: 'Indoor navigation',
+    kind: 'Geospatial',
+    summary: 'Finding the way out of a building, floor by floor.',
+    detail:
+      'Floor plans as walkable graphs of rooms, doors, stairs and elevators. Pick a room and it routes you to the front door, around the walls and the furniture, by the stairs or the elevator.',
+    demo: 'indoor',
+  },
 ]
 
 export const toolbox = [

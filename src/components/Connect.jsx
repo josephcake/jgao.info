@@ -1,4 +1,3 @@
-import Duck from './Duck'
 import { links } from '../data'
 import Happy from './Happy'
 import Summit from './Summit'
@@ -34,7 +33,6 @@ export default function Connect({ chapters }) {
         <div className="connect__earth">
           <p className="connect__sign">
             Joseph Gao, still climbing.
-            <Duck spot="footer" />
           </p>
         </div>
       </div>

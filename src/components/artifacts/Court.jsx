@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 import useFrame from './useFrame'
-import Duck from '../Duck'
 
 // Regulation court at 20.2 px per meter: 23.77 m by 10.97 m doubles.
 const X0 = 40
@@ -35,7 +34,6 @@ export default function Court({ drawn }) {
 
   return (
     <figure className={`artifact artifact--court ${drawn ? 'is-drawn' : ''}`}>
-      <Duck spot="court" />
       <svg className="artifact__svg" viewBox="0 0 560 262" role="img" aria-label="Top-down tennis court with a rally in progress">
         <rect className="fade art-surface" x={X0} y={Y0} width={LEN} height={WID} />
         <g className="art-stroke">

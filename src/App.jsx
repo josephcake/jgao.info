@@ -9,10 +9,8 @@ import GitHubActivity from './components/GitHubActivity'
 import Connect from './components/Connect'
 import ThemeSwitch from './components/ThemeSwitch'
 import CommandPalette from './components/CommandPalette'
-import DuckToast from './components/DuckToast'
 import { chapters, links, projects, toolbox } from './data'
-import { POND_THEME, THEMES, applyTheme, currentTheme, themeBefore } from './lib/theme'
-import { DUCK_SPOTS, resetDucks, useDucks } from './lib/ducks'
+import { THEMES, applyTheme, currentTheme, themeBefore } from './lib/theme'
 
 const scrollToId = (id, block = 'start') => {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -25,23 +23,14 @@ export default function App() {
   const [theme, setTheme] = useState(currentTheme)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [pastHero, setPastHero] = useState(false)
-  const ducks = useDucks()
-  const themes = useMemo(
-    () => (ducks.length === DUCK_SPOTS.length || theme === POND_THEME.id ? [...THEMES, POND_THEME] : THEMES),
-    [ducks, theme],
-  )
+  const themes = THEMES
 
   const changeTheme = useCallback((id) => {
     applyTheme(id)
     setTheme(id)
   }, [])
   const back = useMemo(() => themeBefore(theme, themes), [theme, themes])
-  const repeatTheme = () => {
-    changeTheme(back.id)
-    if (theme === POND_THEME.id && ducks.length === DUCK_SPOTS.length) {
-      window.dispatchEvent(new CustomEvent('duck:offer-reset', { detail: back.name }))
-    }
-  }
+  const repeatTheme = () => changeTheme(back.id)
 
   useEffect(() => {
     const name = document.querySelector('.hero__name')
@@ -102,6 +91,16 @@ export default function App() {
         },
       },
       {
+        id: 'demo-indoor',
+        group: 'Try',
+        label: 'Find the way out of a building',
+        keywords: 'indoor navigation floor plan route stairs elevator pathfinding',
+        run: () => {
+          window.dispatchEvent(new CustomEvent('lab:open', { detail: 'indoor' }))
+          setTimeout(() => scrollToId('indoor', 'center'), 120)
+        },
+      },
+      {
         id: 'demo-radar',
         group: 'Try',
         label: 'Get tracked by the sensor lab',
@@ -111,17 +110,6 @@ export default function App() {
           setTimeout(() => scrollToId('radar', 'center'), 120)
         },
       },
-      {
-        id: 'duck-hunt',
-        group: 'Try',
-        label: 'Duck hunt: how many have I found?',
-        hint: `${ducks.length} of ${DUCK_SPOTS.length}`,
-        keywords: 'easter egg rubber duck secret hint game',
-        run: () => window.dispatchEvent(new CustomEvent('duck:hint', { detail: ducks })),
-      },
-      ...(ducks.length
-        ? [{ id: 'duck-reset', group: 'Try', label: 'Hide the ducks again', keywords: 'reset duck hunt', run: resetDucks }]
-        : []),
       ...themes.map((t) => ({
         id: `theme-${t.id}`,
         group: 'Theme',
@@ -135,7 +123,7 @@ export default function App() {
       { id: 'open-linkedin', group: 'Open', label: 'LinkedIn profile', run: () => window.open(links.linkedin, '_blank', 'noopener') },
       { id: 'open-terrin', group: 'Open', label: 'Terrin.io', run: () => window.open(links.terrin, '_blank', 'noopener') },
     ],
-    [theme, themes, ducks, changeTheme],
+    [theme, themes, changeTheme],
   )
 
   return (
@@ -168,7 +156,6 @@ export default function App() {
       </main>
       <Connect chapters={chapters} />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} commands={commands} />
-      <DuckToast onTryPond={() => changeTheme(POND_THEME.id)} />
     </>
   )
 }
