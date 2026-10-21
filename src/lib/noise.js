@@ -30,7 +30,7 @@ export function createNoise3D(seed = 1) {
     return t * t * (g[0] * x + g[1] * y + g[2] * z)
   }
 
-  return (xin, yin, zin) => {
+  const noise = (xin, yin, zin) => {
     const s = (xin + yin + zin) * F3
     const i = Math.floor(xin + s)
     const j = Math.floor(yin + s)
@@ -70,4 +70,7 @@ export function createNoise3D(seed = 1) {
     )
     return 32 * (n0 + n1 + n2 + n3)
   }
+  // The table, so a shader can draw the very same field
+  noise.perm = perm
+  return noise
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { createNoise3D } from '../lib/noise'
-import { createScene, PITCH_MAX } from '../lib/heroScene'
+import { createScene, PITCH_MAX, SCROLL_END, storyAt } from '../lib/heroScene'
 import { onThemeChange, readVars } from '../lib/theme'
 
 const CELL = 14
@@ -30,6 +30,7 @@ const smooth = (a, b, v) => {
 
 export default function Terrain() {
   const canvasRef = useRef(null)
+  const glRef = useRef(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -38,6 +39,15 @@ export default function Terrain() {
     const scene = createScene()
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     let colors = readVars(VARS)
+    // The journey past the city runs in WebGL, loaded once the page is up. Without WebGL the hero
+    // falls back to its still layout, as it does for reduced motion.
+    const gl = glRef.current
+    const glContext = reduceMotion ? null : gl.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' })
+    if (!reduceMotion && !glContext) document.documentElement.classList.add('no-webgl')
+    const still = reduceMotion || !glContext
+    let journey = null
+    let disposed = false
+    let glShown = -1
 
     let width = 0
     let height = 0
@@ -71,6 +81,7 @@ export default function Terrain() {
       const hero = document.querySelector('.hero')
       pinLen = hero ? Math.max(0, hero.offsetHeight - height) : 0
       scene.resize(width, height, captionBox(), dpr)
+      journey?.resize(width, height, dpr, scene.band(), scene.handoff())
       dirty = true
     }
 
@@ -209,19 +220,20 @@ export default function Terrain() {
       pointer.x += (pointer.tx - pointer.x) * 0.08
       pointer.y += (pointer.ty - pointer.y) * 0.08
       pointer.strength += (pointer.target - pointer.strength) * 0.05
-      if (reduceMotion && !dirty) return
+      if (still && !dirty) return
       const scroll = window.scrollY
-      const target = reduceMotion || pinLen <= 0 ? 1 : clamp01(scroll / pinLen)
+      const target = still || pinLen <= 0 ? 1 : clamp01(scroll / pinLen)
       // The story trails the scroll a little, so a hard flick glides instead of jumping the camera
       const step = Math.min(1, (time - (lastTick || time)) / 1000)
       lastTick = time
-      story = story === null || reduceMotion ? target : story + (target - story) * (1 - Math.exp(-step / 0.15))
+      story = story === null || still ? target : story + (target - story) * (1 - Math.exp(-step / 0.15))
       if (Math.abs(target - story) < 0.0002) story = target
       if (story !== target) dirty = true
       const p = story
-      const after = Math.max(0, scroll - (reduceMotion ? 0 : pinLen))
-      const pinned = !reduceMotion && pinLen > 0 && p < 1
-      if (time - lastDraw < (pinned ? 16 : 32)) return
+      const after = Math.max(0, scroll - (still ? 0 : pinLen))
+      const pinned = !still && pinLen > 0 && p < 1
+      // Every frame while the story runs; the page's field alone can go at half rate
+      if (!pinned && time - lastDraw < 30) return
       lastDraw = time
       dirty = false
 
@@ -244,10 +256,22 @@ export default function Terrain() {
       cam.cx = width / 2 + view.ox
       cam.cy = height * 0.62 + view.oy
 
-      const ground = pinned ? scene.ground(p) : null
-      sample(reduceMotion ? 0 : time, after, t, ground)
+      // The journey draws the page's own field before it hands back, pointer and all
+      const bump = pointer.strength > 0.001 && t < 0.01 && Math.abs(cam.zoom - 1) < 0.01
+      const at = storyAt(p * SCROLL_END)
+      const shown = journey && pinned ? journey.render(at.p, time, { band: view.band, run: at.run, pointer: { x: pointer.x, y: pointer.y, s: bump ? pointer.strength : 0 } }) : 0
+      if (shown !== glShown) {
+        gl.style.visibility = shown ? 'visible' : 'hidden'
+        glShown = shown
+      }
+      // Under a fully drawn journey there is nothing of the city or the contours to see
       ctx.clearRect(0, 0, width, height)
-      drawContours(view, t, after, ground ? ground.z : 0)
+      if (shown >= 0.999) return
+      const ground = pinned ? scene.ground(p) : null
+      if (view.contour > 0.002) {
+        sample(still ? 0 : time, after, t, ground)
+        drawContours(view, t, after, ground ? ground.z : 0)
+      }
       if (pinned) scene.draw(ctx, { p, time, pt, cam: view, colors, rise: RISE })
     }
 
@@ -265,20 +289,32 @@ export default function Terrain() {
     const onScroll = () => { dirty = true }
     const offTheme = onThemeChange(() => {
       colors = readVars(VARS)
+      journey?.theme(colors)
       dirty = true
     })
+    if (glContext) {
+      import('../lib/journey').then(({ createJourney }) => {
+        if (disposed) return
+        journey = createJourney(gl, glContext)
+        journey.theme(colors)
+        journey.resize(width, height, Math.min(window.devicePixelRatio || 1, 2), scene.band(), scene.handoff())
+        dirty = true
+      })
+    }
 
     resize()
     document.fonts?.ready.then(resize)
     window.addEventListener('resize', resize)
     window.addEventListener('scroll', onScroll, { passive: true })
-    if (!reduceMotion) {
+    if (!still) {
       window.addEventListener('pointermove', onPointerMove, { passive: true })
       document.documentElement.addEventListener('pointerleave', onPointerLeave)
     }
     frame = requestAnimationFrame(tick)
 
     return () => {
+      disposed = true
+      journey?.dispose()
       cancelAnimationFrame(frame)
       offTheme()
       window.removeEventListener('resize', resize)
@@ -289,6 +325,9 @@ export default function Terrain() {
   }, [])
 
   return (
-    <canvas ref={canvasRef} className="terrain" aria-hidden="true" />
+    <>
+      <canvas ref={canvasRef} className="terrain" aria-hidden="true" />
+      <canvas ref={glRef} className="journey" aria-hidden="true" />
+    </>
   )
 }
