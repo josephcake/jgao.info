@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import ThemeSwitch from './ThemeSwitch'
+import BreakIt from './BreakIt'
 
 const LINKS = [
   { id: 'timeline', label: 'Timeline' },
@@ -12,7 +13,7 @@ const LINKS = [
 const ease = [0.22, 1, 0.36, 1]
 
 // One round button in the corner; it opens the sections as a full-screen sheet, with the themes and
-// the search underneath. Once the big name has scrolled away, a small one takes its place up top.
+// the search underneath. The other corner holds the Break it button.
 export default function SiteMenu({ themes, theme, back, onTheme, onRepeat, onSearch }) {
   const reduce = useReducedMotion()
   const [open, setOpen] = useState(false)
@@ -20,15 +21,6 @@ export default function SiteMenu({ themes, theme, back, onTheme, onRepeat, onSea
   const first = useRef(null)
   // Focus goes back to the button when the menu is closed, not when a link has moved the page on
   const restore = useRef(true)
-  const [past, setPast] = useState(false)
-
-  useEffect(() => {
-    const name = document.querySelector('.hero__name')
-    if (!name) return
-    const seen = new IntersectionObserver(([e]) => setPast(!e.isIntersecting && e.boundingClientRect.top < 0))
-    seen.observe(name)
-    return () => seen.disconnect()
-  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -58,24 +50,7 @@ export default function SiteMenu({ themes, theme, back, onTheme, onRepeat, onSea
 
   return (
     <>
-      <AnimatePresence>
-        {(past || open) && (
-          <motion.a
-            className="menu__mark"
-            href="#top"
-            onClick={(e) => {
-              e.preventDefault()
-              go('top')
-            }}
-            initial={reduce ? false : { opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3, ease }}
-          >
-            Joseph Gao
-          </motion.a>
-        )}
-      </AnimatePresence>
+      <BreakIt />
 
       <button
         ref={toggle}

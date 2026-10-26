@@ -33,6 +33,8 @@ const HOWL_COOLDOWN_MS = 15000
 const PET_MS = 2600
 const HEAD_X = 106
 const HEAD_Y = 60
+const TAUNTS = ['Catch me!', 'Too slow!', 'Nope!', 'Over here!']
+const KO_HITS = 3
 
 const rand = (a, b) => a + Math.random() * (b - a)
 const pick = (list) => list[Math.floor(Math.random() * list.length)]
@@ -116,9 +118,14 @@ function Samoyed() {
         <ellipse cx="60" cy="54" rx="15" ry="5" fill="#f4e6df" />
         <path className="happy__fur" stroke="#23302f" strokeWidth="1.6" strokeLinejoin="round" d="M89 73 L84 80 L95 77 Z" />
         <Fluff circles={[[92, 65, 11], [101, 69, 9], [108, 65, 7]]} />
-        <path d="M97 66 Q99.5 63.6 102 66" fill="none" stroke="#1d2324" strokeWidth="1.2" strokeLinecap="round" />
+        <path className="happy__roll-eye" d="M97 66 Q99.5 63.6 102 66" fill="none" stroke="#1d2324" strokeWidth="1.2" strokeLinecap="round" />
+        <path className="happy__x-eye" d="M97.4 62.6 L101.6 66.8 M101.6 62.6 L97.4 66.8" fill="none" stroke="#1d2324" strokeWidth="1.3" strokeLinecap="round" />
         <circle className="happy__dark" cx="114.4" cy="66" r="2.2" />
-        <ellipse className="happy__tongue" cx="110" cy="59.5" rx="1.8" ry="3" />
+        <ellipse className="happy__tongue happy__roll-tongue" cx="110" cy="59.5" rx="1.8" ry="3" />
+        <g className="happy__dead-tongue">
+          <path d="M108.6 68.4 C108 73 109.2 77.6 112 77.6 C114.9 77.6 115.6 73.4 114.2 68.8 Z" fill="#ec8a92" stroke="#23302f" strokeWidth="1" strokeLinejoin="round" />
+          <path d="M111.4 70.2 L111.7 75" fill="none" stroke="#c96470" strokeWidth="0.8" strokeLinecap="round" />
+        </g>
       </g>
     </svg>
   )
@@ -320,6 +327,7 @@ export default function Happy() {
       howledAt: -Infinity,
       clock: 0,
       y: 0,
+      hits: 0,
     }
     let visible = false
     const pool = [...el.bits.children]
@@ -456,15 +464,49 @@ export default function Happy() {
       }
     }
 
-    const endEvent = () => {
+    const clearEvent = () => {
       s.critter = null
+      s.ball = null
       s.treat = null
       s.fly = null
       s.bug = null
       s.leaf = null
       s.y = 0
+      s.rest = s.sniff = s.bark = 0
+    }
+    const endEvent = () => {
+      clearEvent()
       s.next = rand(5000, 9000)
       enter('walk')
+    }
+    // Somewhere well away from her, on the other side of the strip
+    const escape = () => {
+      const mid = (box.g0 + box.g1 - DOG_W) / 2
+      const away = s.x < mid ? rand(0.6, 0.95) : rand(0.05, 0.4)
+      return onLine(box.g0 + (box.g1 - box.g0 - DOG_W) * away)
+    }
+
+    // Break it mode: the first two balls set her running, the third knocks her out cold
+    const onHit = (e) => {
+      e.preventDefault()
+      if (s.mode === 'dead') return
+      s.hits += 1
+      clearEvent()
+      if (s.hits < KO_HITS) {
+        s.goal = escape()
+        say(s.hits === 1 ? 'Yip!' : 'Hey!', 700)
+        enter('tempt', 'run')
+      } else {
+        say('Ow.', 900)
+        enter('dead', 'flop')
+      }
+    }
+    const onFix = () => {
+      s.hits = 0
+      if (s.mode === 'tempt' || s.mode === 'dead') {
+        endEvent()
+        say('Huh?', 900)
+      }
     }
 
     const step = (dt) => {
@@ -854,6 +896,27 @@ export default function Happy() {
           }
           if (s.t > 2000) endEvent()
         }
+      } else if (s.mode === 'tempt') {
+        // dash off, then turn and play-bow at you until the next run
+        if (s.phase === 'run') {
+          pose.gallop = true
+          if (moveToward(s.goal, ZOOM, dt)) {
+            s.dir = -s.dir
+            s.bowFor = rand(1100, 1900)
+            say(pick(TAUNTS), 1000)
+            setPhase('bow')
+          }
+        } else {
+          pose.bow = pose.wag = true
+          pose.pant = s.t > 400
+          if (s.t > s.bowFor) {
+            s.goal = escape()
+            setPhase('run')
+          }
+        }
+      } else if (s.mode === 'dead') {
+        pose.belly = pose.dead = true
+        pose.wag = false
       } else if (s.mode === 'sleep') {
         if (s.phase === 'lie') {
           pose.lie = true
@@ -907,6 +970,7 @@ export default function Happy() {
       if (pose.reach) cls.push('is-reaching')
       if (pose.pawUp) cls.push('is-pawing-up')
       if (pose.belly) cls.push('is-belly')
+      if (pose.dead) cls.push('is-dead')
       if (pose.shake) cls.push('is-shaking')
       if (pose.dig) cls.push('is-digging')
       if (pose.howl) cls.push('is-howling')
@@ -1090,6 +1154,8 @@ export default function Happy() {
       enter('howl', 'sit')
     }
     window.addEventListener('dispatch:siren', onSiren)
+    el.dog.addEventListener('break:hit', onHit)
+    window.addEventListener('break:fix', onFix)
 
     const observer = new IntersectionObserver(([entry]) => {
       cancelAnimationFrame(id)
@@ -1104,13 +1170,15 @@ export default function Happy() {
       observer.disconnect()
       cancelAnimationFrame(id)
       window.removeEventListener('dispatch:siren', onSiren)
+      el.dog.removeEventListener('break:hit', onHit)
+      window.removeEventListener('break:fix', onFix)
     }
     // Refs are stable for the life of the component.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
-    <div ref={refs.track} className="happy">
+    <div ref={refs.track} className="happy" data-unbreakable>
       <div ref={refs.critter} className="happy__critter" aria-hidden="true">
         <span ref={refs.critterFlip} className="happy__critter-flip">
           <Critters />
@@ -1146,6 +1214,7 @@ export default function Happy() {
         ref={refs.dog}
         type="button"
         className="happy__dog"
+        data-break-homing
         aria-label="Happy, our Samoyed. Click to say hi or give her a pet."
         onClick={() => clickRef.current()}
       >

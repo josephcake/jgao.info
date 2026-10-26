@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useInView } from 'motion/react'
 import data from '../contributions.json'
 import { ESTIMATED_AFTER, workDays } from '../lib/workDays'
@@ -12,6 +12,8 @@ const WEEKS = 54
 const RIGHT = 46
 const MIN_TOTAL = 20
 const DAY = 86400000
+// How far from where the ball lands a cell still gets filled, in screen pixels
+const HIT_R = 12
 const LAST_YEAR = Math.max(data.lastYear, new Date().getUTCFullYear())
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const PERSONAL = data.accounts[0]
@@ -119,7 +121,44 @@ export default function GitHubActivity() {
     if (cell) setHovered({ ri: Number(cell.dataset.ri), w: Number(cell.dataset.w) })
   }
   const figureRef = useRef(null)
+  const svgRef = useRef(null)
   const inView = useInView(figureRef, { once: true, margin: '-15% 0px' })
+
+  // In Break it mode a ball fills in the weeks it lands on instead of smashing the chart
+  const [filled, setFilled] = useState(() => new Set())
+  useEffect(() => {
+    const svg = svgRef.current
+    const onHit = (e) => {
+      e.preventDefault()
+      const { x, y } = e.detail
+      const reach = HIT_R
+      const hits = []
+      let nearest = null
+      let nearestD = Infinity
+      for (const cell of svg.querySelectorAll('[data-w]')) {
+        const r = cell.getBoundingClientRect()
+        const dx = Math.max(r.left - x, 0, x - r.right)
+        const dy = Math.max(r.top - y, 0, y - r.bottom)
+        const d = Math.hypot(dx, dy)
+        const key = `${cell.dataset.ri}-${cell.dataset.w}`
+        if (d <= reach) hits.push(key)
+        if (d < nearestD) {
+          nearest = key
+          nearestD = d
+        }
+      }
+      // a ball that lands in a gap still fills the week it was nearest to
+      if (!hits.length && nearest && nearestD <= reach * 3) hits.push(nearest)
+      if (hits.length) setFilled((f) => new Set([...f, ...hits]))
+    }
+    const onFix = () => setFilled(new Set())
+    svg.addEventListener('break:hit', onHit)
+    window.addEventListener('break:fix', onFix)
+    return () => {
+      svg.removeEventListener('break:hit', onHit)
+      window.removeEventListener('break:fix', onFix)
+    }
+  }, [])
   const rows = useMemo(buildRows, [])
 
   const views = useMemo(() => Object.fromEntries(MODES.map((m) => [m.id, buildView(m.id, rows)])), [rows])
@@ -203,8 +242,9 @@ export default function GitHubActivity() {
       </div>
 
       <figure ref={figureRef} className={`github__figure ${inView ? 'is-drawn' : ''} ${empty ? 'is-empty' : ''}`}>
-        <div className="github__grid">
+        <div className="github__grid" data-unbreakable>
           <svg
+            ref={svgRef}
             className="github__svg"
             viewBox={`0 0 ${width} ${height}`}
             role="img"
@@ -224,10 +264,11 @@ export default function GitHubActivity() {
                     const v = view.value(row, w)
                     const owner = mode === 'both' ? (row.work[w] > row.personal[w] ? 'work' : 'personal') : mode === WORK.handle ? 'work' : 'personal'
                     const before = time + 7 * DAY < view.joined
+                    const hit = filled.has(`${ri}-${w}`)
                     return (
                       <rect
                         key={w}
-                        className={`gh-cell gh-cell--${view.level(v)} gh-cell--${owner} ${before ? 'is-before' : ''} ${hovered?.ri === ri && hovered?.w === w ? 'is-hovered' : ''}`}
+                        className={`gh-cell gh-cell--${hit ? 4 : view.level(v)} gh-cell--${owner} ${before && !hit ? 'is-before' : ''} ${hit ? 'is-filled' : ''} ${hovered?.ri === ri && hovered?.w === w ? 'is-hovered' : ''}`}
                         style={{ '--d': `${w * 0.006 + ri * 0.05}s` }}
                         x={LEFT + w * (CELL + GAP)}
                         y={y}

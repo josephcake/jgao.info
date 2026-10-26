@@ -246,25 +246,190 @@ main,
   transition: transform 0.3s var(--ease), background-color 0.5s var(--ease);
 }
 
-.menu__mark {
+/* Break it: the corner button that turns the page into a range for tennis balls */
+.break {
   position: fixed;
   top: max(16px, env(safe-area-inset-top));
   left: var(--gutter);
   z-index: 40;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  gap: 14px;
   min-height: 48px;
-  font-family: var(--headline);
-  font-size: 1.125rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-  text-decoration: none;
-  text-shadow: 0 0 6px var(--paper), 0 0 14px var(--paper);
 }
 
-.menu__mark:hover {
-  color: var(--signal);
+.break__button {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--headline);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: transform 0.3s var(--ease), background-color 0.3s var(--ease);
+}
+
+.break__button:hover {
+  transform: scale(1.04);
+}
+
+.break__button.is-on {
+  background: var(--signal);
+}
+
+.break__hint {
+  font-size: var(--fs-small);
+  color: var(--ink);
+  text-shadow: 0 0 6px var(--paper), 0 0 14px var(--paper);
+  white-space: nowrap;
+}
+
+html.is-breaking,
+html.is-breaking * {
+  cursor: crosshair !important;
+  user-select: none !important;
+}
+
+html.is-breaking .break,
+html.is-breaking .break * {
+  cursor: pointer !important;
+}
+
+/* The hero name stops drawing on its canvas so each letter is real type that can break */
+html.is-breaking .hero__scan {
+  display: none;
+}
+
+html.is-breaking .hero__name--scan .hero__char {
+  color: inherit;
+}
+
+[data-broken] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Page-sized, so the pieces settle at the bottom of the page rather than over the screen */
+.break-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 38;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.break-shard {
+  position: absolute;
+  overflow: visible;
+  will-change: transform;
+}
+
+.break-shard__tilt,
+.break-shard__face {
+  position: absolute;
+  inset: 0;
+}
+
+.break-shard__tilt {
+  will-change: transform;
+}
+
+.break-cracks {
+  position: absolute;
+  z-index: 1;
+  overflow: visible;
+  pointer-events: none;
+  animation: break-cracks-out 0.16s ease-in 0.07s forwards;
+}
+
+.break-cracks line {
+  stroke: var(--paper);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  animation: break-crack 0.06s linear forwards;
+}
+
+@keyframes break-crack {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes break-cracks-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.break-grit {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  border-radius: 1px;
+  will-change: transform, opacity;
+}
+
+.break-ball.is-hit svg {
+  animation: break-squash 0.16s ease-out;
+}
+
+@keyframes break-squash {
+  0% {
+    transform: scale(1.3, 0.72);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.break-ball {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  will-change: transform;
+}
+
+.break-ball svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.break-ring {
+  position: absolute;
+  z-index: 1;
+  width: 80px;
+  height: 80px;
+  margin: -40px 0 0 -40px;
+  border: 2px solid var(--signal);
+  border-radius: 50%;
+  animation: break-ring 0.45s var(--ease) forwards;
+}
+
+@keyframes break-ring {
+  from {
+    transform: scale(0.2);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .break__hint {
+    display: none;
+  }
 }
 
 .menu__toggle:hover {
@@ -1245,6 +1410,21 @@ main,
 .gh-cell--2 { fill-opacity: 0.5; }
 .gh-cell--3 { fill-opacity: 0.75; }
 .gh-cell--4 { fill-opacity: 1; }
+
+.gh-cell.is-filled {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: gh-fill 0.4s var(--ease);
+}
+
+@keyframes gh-fill {
+  0% {
+    transform: scale(1.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
 
 .gh-cell.is-hovered {
   stroke: var(--ink);
@@ -3337,6 +3517,51 @@ body::after {
 @keyframes happy-paddle {
   from { transform: rotate(-10deg); }
   to { transform: rotate(12deg); }
+}
+
+/* Knocked out cold: a flip onto her back, legs stiff, an X for an eye and her tongue lolling */
+.happy__x-eye {
+  display: none;
+}
+
+.is-dead .happy__x-eye {
+  display: inline;
+}
+
+.is-dead .happy__roll-eye {
+  display: none;
+}
+
+.is-dead .happy__roll-leg {
+  animation: none;
+}
+
+.happy__dead-tongue {
+  display: none;
+}
+
+.is-dead .happy__dead-tongue {
+  display: inline;
+}
+
+.is-dead .happy__roll-tongue {
+  display: none;
+}
+
+.is-dead .happy__svg {
+  animation: happy-flop 0.6s var(--ease);
+}
+
+@keyframes happy-flop {
+  0% {
+    transform: translateY(0) rotate(0);
+  }
+  45% {
+    transform: translateY(-30px) rotate(-200deg);
+  }
+  100% {
+    transform: translateY(0) rotate(-360deg);
+  }
 }
 
 .is-belly .happy__pet-hand {
