@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { motion, useInView } from 'motion/react'
 import data from '../contributions.json'
 import { ESTIMATED_AFTER, workDays } from '../lib/workDays'
+import useBallFill from '../lib/useBallFill'
 
 const CELL = 9
 const GAP = 2
@@ -12,8 +13,6 @@ const WEEKS = 54
 const RIGHT = 46
 const MIN_TOTAL = 20
 const DAY = 86400000
-// How far from where the ball lands a cell still gets filled, in screen pixels
-const HIT_R = 12
 const LAST_YEAR = Math.max(data.lastYear, new Date().getUTCFullYear())
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const PERSONAL = data.accounts[0]
@@ -124,41 +123,7 @@ export default function GitHubActivity() {
   const svgRef = useRef(null)
   const inView = useInView(figureRef, { once: true, margin: '-15% 0px' })
 
-  // In Break it mode a ball fills in the weeks it lands on instead of smashing the chart
-  const [filled, setFilled] = useState(() => new Set())
-  useEffect(() => {
-    const svg = svgRef.current
-    const onHit = (e) => {
-      e.preventDefault()
-      const { x, y } = e.detail
-      const reach = HIT_R
-      const hits = []
-      let nearest = null
-      let nearestD = Infinity
-      for (const cell of svg.querySelectorAll('[data-w]')) {
-        const r = cell.getBoundingClientRect()
-        const dx = Math.max(r.left - x, 0, x - r.right)
-        const dy = Math.max(r.top - y, 0, y - r.bottom)
-        const d = Math.hypot(dx, dy)
-        const key = `${cell.dataset.ri}-${cell.dataset.w}`
-        if (d <= reach) hits.push(key)
-        if (d < nearestD) {
-          nearest = key
-          nearestD = d
-        }
-      }
-      // a ball that lands in a gap still fills the week it was nearest to
-      if (!hits.length && nearest && nearestD <= reach * 3) hits.push(nearest)
-      if (hits.length) setFilled((f) => new Set([...f, ...hits]))
-    }
-    const onFix = () => setFilled(new Set())
-    svg.addEventListener('break:hit', onHit)
-    window.addEventListener('break:fix', onFix)
-    return () => {
-      svg.removeEventListener('break:hit', onHit)
-      window.removeEventListener('break:fix', onFix)
-    }
-  }, [])
+  const filled = useBallFill(svgRef)
   const rows = useMemo(buildRows, [])
 
   const views = useMemo(() => Object.fromEntries(MODES.map((m) => [m.id, buildView(m.id, rows)])), [rows])
@@ -277,6 +242,7 @@ export default function GitHubActivity() {
                         rx="2"
                         data-ri={ri}
                         data-w={w}
+                        data-cell={`${ri}-${w}`}
                         onMouseEnter={() => setHovered({ ri, w })}
                       />
                     )

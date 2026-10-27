@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { repoDays } from '../../data'
+import useBallFill from '../../lib/useBallFill'
 
 const START = Date.UTC(2018, 9, 28)
 const FIRST = Date.UTC(2018, 10, 1)
@@ -36,6 +37,8 @@ const total = cells.reduce((sum, c) => sum + c.count, 0)
 
 export default function Commits({ drawn }) {
   const [hovered, setHovered] = useState(null)
+  const svgRef = useRef(null)
+  const filled = useBallFill(svgRef)
   const scrub = (e) => {
     if (e.pointerType === 'mouse') return
     const cell = document.elementFromPoint(e.clientX, e.clientY)?.closest?.('[data-i]')
@@ -45,7 +48,9 @@ export default function Commits({ drawn }) {
   return (
     <figure className={`artifact ${drawn ? 'is-drawn' : ''}`}>
       <svg
+        ref={svgRef}
         className="artifact__svg artifact__svg--calendar"
+        data-unbreakable
         viewBox={`0 0 ${LEFT + WEEKS * (CELL + GAP)} ${TOP + 7 * (CELL + GAP)}`}
         role="img"
         aria-label={`Calendar of new GitHub repositories from November 2018 to April 2019, ${total} in total`}
@@ -62,7 +67,7 @@ export default function Commits({ drawn }) {
         {cells.map((c, i) => (
           <rect
             key={c.key}
-            className={`cal cal--${level(c.count)} ${hovered?.key === c.key ? 'is-hovered' : ''}`}
+            className={`cal cal--${filled.has(c.key) ? 4 : level(c.count)} ${filled.has(c.key) ? 'is-filled' : ''} ${hovered?.key === c.key ? 'is-hovered' : ''}`}
             style={{ '--d': `${c.w * 0.035}s` }}
             x={LEFT + c.w * (CELL + GAP)}
             y={TOP + c.d * (CELL + GAP)}
@@ -70,6 +75,7 @@ export default function Commits({ drawn }) {
             height={CELL}
             rx="2.5"
             data-i={i}
+            data-cell={c.key}
             onMouseEnter={() => setHovered(c)}
           />
         ))}

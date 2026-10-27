@@ -1411,13 +1411,14 @@ html.is-breaking .hero__name--scan .hero__char {
 .gh-cell--3 { fill-opacity: 0.75; }
 .gh-cell--4 { fill-opacity: 1; }
 
-.gh-cell.is-filled {
+.gh-cell.is-filled,
+.cal.is-filled {
   transform-box: fill-box;
   transform-origin: center;
-  animation: gh-fill 0.4s var(--ease);
+  animation: ball-fill 0.4s var(--ease);
 }
 
-@keyframes gh-fill {
+@keyframes ball-fill {
   0% {
     transform: scale(1.9);
   }
