@@ -111,6 +111,7 @@ export default function App() {
       { id: 'open-github', group: 'Open', label: 'Personal GitHub (josephcake)', keywords: 'github', run: () => window.open(links.github, '_blank', 'noopener') },
       { id: 'open-linkedin', group: 'Open', label: 'LinkedIn profile', run: () => window.open(links.linkedin, '_blank', 'noopener') },
       { id: 'open-terrin', group: 'Open', label: 'Terrin.io', run: () => window.open(links.terrin, '_blank', 'noopener') },
+      { id: 'open-quackhunt', group: 'Open', label: 'Play Destroy the Duck (quackhunt.com)', keywords: 'game duck maze algorithms quack hunt', run: () => window.open(links.quackhunt, '_blank', 'noopener') },
     ],
     [theme, themes, changeTheme],
   )

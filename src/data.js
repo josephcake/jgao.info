@@ -3,6 +3,7 @@ export const links = {
   githubWork: 'https://github.com/jgaosos',
   linkedin: 'https://www.linkedin.com/in/jocake/',
   terrin: 'https://terrin.io',
+  quackhunt: 'https://quackhunt.com',
 }
 
 // New GitHub repositories per day, from github.com/josephcake.
@@ -61,6 +62,7 @@ export const chapters = [
       'JavaScript and React took over. My favorite: Destroy the Duck, where search algorithms hunt a rubber duck through a maze.',
       'Then my first paid frontend work, at Learning Economy, connecting education through open data standards.',
     ],
+    play: { label: 'quackhunt.com', href: 'https://quackhunt.com', what: 'Destroy the Duck is still live at' },
     repos: ['Gitfolio', 'destroy-the-duck', 'mewgrounds', 'stocky'],
     tags: ['JavaScript', 'React', 'Algorithms', 'Open standards'],
     artifact: 'windows',

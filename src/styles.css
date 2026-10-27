@@ -2816,6 +2816,19 @@ body::after {
   transform: translateY(-10px);
 }
 
+.win--link a {
+  cursor: pointer;
+}
+
+.win--link a:focus-visible {
+  outline: none;
+}
+
+.win--link a:hover .win__frame,
+.win--link a:focus-visible .win__frame {
+  stroke: var(--signal);
+}
+
 .win__frame {
   fill: var(--paper);
   stroke: var(--ink);

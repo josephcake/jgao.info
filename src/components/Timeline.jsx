@@ -97,6 +97,15 @@ export default function Timeline({ chapters }) {
               )}
               {Artifact && <Artifact drawn={i <= active} />}
               {c.demo === 'dispatch' && <DispatchMap />}
+              {c.play && (
+                <p className="chapter__repos">
+                  {c.play.what}{' '}
+                  <a href={c.play.href} target="_blank" rel="noreferrer">
+                    {c.play.label}
+                  </a>
+                  . Go hunt it.
+                </p>
+              )}
               {c.repos && (
                 <p className="chapter__repos">
                   From the repo list:{' '}

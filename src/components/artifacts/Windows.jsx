@@ -1,4 +1,5 @@
 import DuckHunt from './DuckHunt'
+import { links } from '../../data'
 
 const W = 190
 const H = 136
@@ -56,7 +57,7 @@ function Stocky() {
 
 const LAYOUT = [
   { Comp: Gitfolio, x: 8, y: 34, r: -4 },
-  { Comp: DestroyTheDuck, x: 205, y: 14, r: 1.5 },
+  { Comp: DestroyTheDuck, x: 205, y: 14, r: 1.5, href: links.quackhunt, label: 'Play Destroy the Duck at quackhunt.com' },
   { Comp: Stocky, x: 402, y: 40, r: 4 },
 ]
 
@@ -64,22 +65,33 @@ export default function Windows({ drawn }) {
   return (
     <figure className={`artifact ${drawn ? 'is-drawn' : ''}`}>
       <svg className="artifact__svg" viewBox="0 0 600 210" role="img" aria-label="Sketches of three early projects: Gitfolio, Destroy the Duck searching a maze, and stocky">
-        {LAYOUT.map(({ Comp, x, y, r }, i) => (
-          <g
-            key={i}
-            className="win"
-            style={{
-              '--x': `${x}px`,
-              '--y': `${y}px`,
-              '--r': `${r}deg`,
-              '--d': `${0.1 + i * 0.12}s`,
-            }}
-          >
+        {LAYOUT.map(({ Comp, x, y, r, href, label }, i) => {
+          const win = (
             <g className="win__lift">
               <Comp drawn={drawn} />
             </g>
-          </g>
-        ))}
+          )
+          return (
+            <g
+              key={i}
+              className={`win ${href ? 'win--link' : ''}`}
+              style={{
+                '--x': `${x}px`,
+                '--y': `${y}px`,
+                '--r': `${r}deg`,
+                '--d': `${0.1 + i * 0.12}s`,
+              }}
+            >
+              {href ? (
+                <a href={href} target="_blank" rel="noreferrer" aria-label={label}>
+                  {win}
+                </a>
+              ) : (
+                win
+              )}
+            </g>
+          )
+        })}
       </svg>
       <figcaption>Early projects, each a little less tutorial and a little more mine. The middle one is still hunting its duck.</figcaption>
     </figure>
