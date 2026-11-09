@@ -1,0 +1,84 @@
+{
+  "id": "room05",
+  "name": "ELEVATOR PITCH",
+  "tagline": "it goes up. we're seeking funding.",
+  "width": 30,
+  "height": 40,
+  "bg": "city",
+  "spawn": [
+    4,
+    36
+  ],
+  "exit": [
+    26,
+    7,
+    2,
+    4
+  ],
+  "solids": [
+    [
+      0,
+      0,
+      2,
+      40
+    ],
+    [
+      28,
+      0,
+      2,
+      40
+    ],
+    [
+      2,
+      37,
+      26,
+      3
+    ],
+    [
+      20,
+      11,
+      8,
+      1
+    ]
+  ],
+  "oneway": [],
+  "spikes": [],
+  "neon": [],
+  "true": [],
+  "entities": [
+    {
+      "type": "terminal",
+      "x": 3,
+      "y": 36,
+      "text": "CAPACITORS STORE POWER, LIKE A GRUDGE.\nCABLE SOURCE TO CAPACITOR, WAIT FOR FULL,\nTHEN {jack} TO RECALL. THE LIFT RUNS ON THE GRUDGE."
+    },
+    {
+      "type": "source",
+      "id": "s1",
+      "x": 6,
+      "y": 34
+    },
+    {
+      "type": "capacitor",
+      "id": "b1",
+      "x": 11,
+      "y": 34
+    },
+    {
+      "type": "lift",
+      "x": 16,
+      "y": 37,
+      "w": 4,
+      "toY": 12,
+      "inputs": [
+        "b1"
+      ]
+    },
+    {
+      "type": "terminal",
+      "x": 22,
+      "y": 10,
+      "text": "ELEVATOR PITCH: 'IT GOES UP.'\nSERIES A CLOSED."
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "dead-pixel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "DEAD PIXEL: one RGB pixel walks out of your monitor with an ethernet cable.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "gen:room": "node scripts/gen-room.mjs",
+    "build:single": "vite build --mode single && mv dist/single/index.html dist/dead-pixel.html && rm -rf dist/single",
+    "gen:stage": "node scripts/gen-stage.mjs"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.6",
+    "vite-plugin-singlefile": "^2.3.4",
+    "vitest": "^5.1.0"
+  }
+}

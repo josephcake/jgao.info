@@ -1,0 +1,139 @@
+{
+  "id": "room01",
+  "name": "ALLEY BOOT",
+  "tagline": "first contact with an analog dimension",
+  "width": 72,
+  "height": 18,
+  "bg": "city",
+  "spawn": [
+    4,
+    14
+  ],
+  "exit": [
+    70,
+    0,
+    2,
+    3
+  ],
+  "solids": [
+    [
+      0,
+      0,
+      2,
+      18
+    ],
+    [
+      2,
+      15,
+      11,
+      3
+    ],
+    [
+      13,
+      13,
+      5,
+      5
+    ],
+    [
+      22,
+      15,
+      9,
+      3
+    ],
+    [
+      37,
+      15,
+      13,
+      3
+    ],
+    [
+      50,
+      7,
+      4,
+      11
+    ],
+    [
+      54,
+      15,
+      18,
+      3
+    ],
+    [
+      60,
+      4,
+      2,
+      9
+    ],
+    [
+      64,
+      3,
+      2,
+      12
+    ],
+    [
+      66,
+      3,
+      6,
+      1
+    ],
+    [
+      31,
+      17,
+      8,
+      1
+    ]
+  ],
+  "oneway": [],
+  "spikes": [
+    [
+      31,
+      16,
+      6
+    ]
+  ],
+  "neon": [],
+  "true": [],
+  "entities": [
+    {
+      "type": "terminal",
+      "x": 6,
+      "y": 14,
+      "text": "HELLO, PIX. {left}/{right} TO MOVE, {jump} TO JUMP.\nYOU ARE A 16x20 GUEST IN A 4K WORLD.\nTRY NOT TO LOOK COMPRESSED."
+    },
+    {
+      "type": "terminal",
+      "x": 15,
+      "y": 12,
+      "text": "GAPS: JUMP. BIG GAPS: JUMP AGAIN, MID-AIR.\nPHYSICS HERE IS DISTURBINGLY ANALOG."
+    },
+    {
+      "type": "terminal",
+      "x": 24,
+      "y": 14,
+      "text": "{dash} TO DASH. YOU'RE BRIEFLY INVULNERABLE,\nLIKE A WELL-WRITTEN FIREWALL RULE."
+    },
+    {
+      "type": "terminal",
+      "x": 29,
+      "y": 14,
+      "text": "SPIKES ARE RUDE. DOUBLE JUMP OVER THEM.\nNOBODY IS COMING TO FIGHT YOU HERE.\nTHE LOCALS JUST WANT YOU OUT OF THE ALLEY."
+    },
+    {
+      "type": "terminal",
+      "x": 46,
+      "y": 14,
+      "text": "{jack} TO JACK IN. DIRECTIONS PICK THE PORT.\nYELLOW PORTS PULL YOU TO THEM.\nTHEY'RE THE ONLY THINGS HERE THAT SPEAK TCP."
+    },
+    {
+      "type": "terminal",
+      "x": 57,
+      "y": 14,
+      "text": "WALLS ARE STICKY. JUMP BETWEEN THEM.\nEVERYTHING HERE IS A LITTLE STICKY. EW."
+    },
+    {
+      "type": "pull",
+      "x": 48,
+      "y": 6
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+// 1-11: green lens + power doors, merged. Practice.
+id l1-11
+name 1-11 GREEN ROOM
+tagline green means go. doors mean wait.
+bg city
+// RULES: what this room is about, how often each mechanic shows up, how hard each portion is (docs/level-design-rules.md)
+main consumer green
+mechanics plank:5 consumer:1 colour:1 blue:3 green:3
+new consumer green
+portion 3 green ledges in the green zone
+portion 3 consumer opens the gate
+hardness 3
+map
+##############################################..................................
+##############################################..................................
+##.........................................###..................................
+##.........................................###..................................
+##.........................................###..................................
+##.........................................###..................................
+##.........................................###..................................
+##............................................################################..
+##............................................################################..
+##...........................*.............###..............................##..
+##...........BB..............GG.............................................##..
+##..........................................................................##..
+##.....................................####.................................##..
+##.@.?...............?.................####.................................##..
+#########.BBB...BBB.#####.GGG...GGG.#######.................................##..
+#########=..........#####=..........#######................*................##..
+#########...........#####...........#######.............======............EE##..
+#########...........#####...........#######...............................EE##..
+#########...........#####...........#######...............................EE##..
+#########=..........#####=..........#######...............................EE##..
+#########...........#####...........#######..........................#########..
+#########...........#####...........#######....?...........?.........#########..
+#########...........#####...........#######...################################..
+###########################################...################################..
+##############################################################################..
+end
+text GREEN, AT LAST. TAP {jack} TO PLUG IN.\nIN A GREEN ZONE, GREEN LEDGES ARE REAL.\nNO CURRENT IN THESE PITS. PRACTISE. || GREEN, AT LAST. TAP {jack} TO PLUG IN.\nTHEN HOLD {recal} IN A GREEN ZONE.\nNO CURRENT IN THESE PITS. PRACTISE.
+text THE ZONE CHANGES COLOUR AHEAD.\nSO DO THE LEDGES YOU CAN STAND ON.\nBLUE IN THE BLUE. GREEN IN THE GREEN. || THE ZONE CHANGES COLOUR AHEAD.\nLET GO OF {recal}. PRESS IT AGAIN IN THE GREEN.\nTHE LENS TAKES THE COLOUR YOU PRESS IT IN.
+zone blue 0 0 22 25
+zone green 22 0 23 25
+entity {"type":"connector","x":7,"y":10,"color":"green"}
+text A SOURCE AND A CONSUMER.\nTAP {jack} AT THE SOURCE, THEN THE CONSUMER.\nTHE CABLE STAYS PLUGGED. THE GATE OPENS.
+text AIRLOCK. ONE DOOR AT A TIME. HR INSISTS.\n{jack} RECALLS YOUR CABLE.\nNO POWER, NO PROBLEM. THE OTHER DOOR OPENS.
+entity {"type":"source","x": 46,"y": 19,"id": "s1b"}
+entity {"type":"consumer","x": 52,"y": 17,"id": "c1b"}
+entity {"type":"gate","x": 54,"y": 9,"h":13,"inputs": ["c1b"]}
+entity {"type":"gate","x": 63,"y": 9,"h":13,"inputs": ["c1b"],"invert":true}

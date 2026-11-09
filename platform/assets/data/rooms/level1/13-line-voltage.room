@@ -1,0 +1,57 @@
+// 1-13: capacitor lift up, then two-tone lens ledges (blue then green) over a spike pit.
+id l1-13
+name 1-13 LINE VOLTAGE
+tagline charge up, then mind the colour.
+bg city
+// RULES: what this room is about, how often each mechanic shows up, how hard each portion is (docs/level-design-rules.md)
+main lift capacitor
+mechanics current:1 lift:1 capacitor:1 blue:3 green:3
+new lift
+portion 5 capacitor lift ride
+portion 5 blue then green ledges over current
+hardness 5
+map
+##################################################
+##################################################
+##..............................................##
+##..............................................##
+##..............................................##
+##............................................EE##
+##.....................?......................EE##
+##..........................................?.EE##
+##...?.........BBB........GGG.......GGG.######EE##
+########..BBB.......BBB........GGG..............##
+##..............................................##
+##..............................................##
+##..............................................##
+##.......^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^##
+##.......#########################################
+##..............................................##
+##..............................................##
+##..............................................##
+##..............................................##
+##..............................................##
+##..............................................##
+##..............................................##
+##..............................................##
+##..............................................##
+##..............................................##
+##..............................................##
+##..............................................##
+##..............................................##
+##..............................................##
+##..............................................##
+##........@.?...................................##
+##......########................................##
+##################################################
+##################################################
+end
+text THE ZONE CHANGES COLOUR AHEAD.\nSO DO THE LEDGES YOU CAN STAND ON.\nBLUE IN THE BLUE. GREEN IN THE GREEN. || THE ZONE CHANGES COLOUR AHEAD.\nLET GO OF {recal}. PRESS IT AGAIN IN THE GREEN.\nTHE LENS TAKES THE COLOUR YOU PRESS IT IN.
+text ACROSS ON BLUE, THEN GREEN.\nEACH ZONE BRINGS ITS OWN LEDGES.\nTHE EXIT IS RIGHT THERE. || ACROSS ON BLUE, THEN GREEN.\nONE BUTTON. TWO COLOURS. NO EXCUSES.\nTHE EXIT IS RIGHT THERE.
+text RIDE REACHED THE TOP.\nBLUE LEDGES SHOW UP IN THE BLUE ZONE.\nSTEP RIGHT. || RIDE REACHED THE TOP.\nHOLD {recal} IN BLUE TO SEE BLUE LEDGES.\nSTEP RIGHT.
+text THE LIFT RUNS ON A CAPACITOR.\nPLUG IT, WAIT, STEP ON, RECALL THE CABLE.\nRIDE UP BEFORE THE POWER RUNS OUT.
+zone blue 0 0 24 34
+zone green 24 0 26 34
+entity {"type":"source","x":13,"y":30,"id":"s1"}
+entity {"type":"capacitor","x":15,"y":29,"id":"b1","hold":10}
+entity {"type":"lift","x":3,"y":31,"w":4,"toY":9,"inputs":["b1"]}

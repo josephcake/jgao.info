@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DEAD PIXEL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+    <style>
+      html, body { margin: 0; height: 100%; background: #05030f; overflow: hidden; }
+      #game { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+      #game canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="game"></div>
+    <script>
+      (function () {
+        var shown = false;
+        function report(msg) {
+          if (shown) return;
+          shown = true;
+          var el = document.createElement('pre');
+          el.style.cssText = 'position:fixed;inset:0;margin:0;padding:24px;color:#ff5c8a;background:#05030f;' +
+            'font:14px/1.5 monospace;white-space:pre-wrap;z-index:9;user-select:text';
+          el.textContent = 'DEAD PIXEL failed to start.\n\n' + msg + '\n\n' + navigator.userAgent;
+          document.body.appendChild(el);
+        }
+        window.addEventListener('error', function (e) {
+          report((e.error && e.error.stack) || e.message || String(e));
+        });
+        window.addEventListener('unhandledrejection', function (e) {
+          report((e.reason && e.reason.stack) || String(e.reason));
+        });
+        setTimeout(function () {
+          if (!document.querySelector('#game canvas')) report('No game canvas after 8 s (the script never ran).');
+        }, 8000);
+      })();
+    </script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

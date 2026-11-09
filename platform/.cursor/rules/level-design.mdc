@@ -1,0 +1,19 @@
+---
+description: Level design rules for DEAD PIXEL rooms. Read before creating or editing any .room file or room generator.
+globs: assets/data/rooms/**,src/gameplay/RoomGen.ts,src/gameplay/RoomBuilders.ts,scripts/gen-room.mjs,scripts/gen-stage.mjs
+alwaysApply: false
+---
+
+# Level design rules (mandatory)
+
+Read `docs/level-design-rules.md` in full before touching a room. `docs/room-design-guide.md` is only the file-format reference.
+
+Enforced by `tests/unit/roomRules.test.ts`:
+
+1. Every `.room` file has a RULES header before `map`: `main` (1–3 mechanics), `mechanics` (exact counts), `new` (first appearances in the level, or `-`), one `portion <1-10> <label>` line per section of the route, and `hardness` = the mean of the portions.
+2. **Next room = a new mechanic, or harder.** If `new` is `-`, `hardness` must be strictly greater than the previous room's. One decimal is allowed: climb slowly with a different setup. Never bump a number without making the room harder: change the room or the order.
+3. **Later rooms hover at 5–8:** in the last third of a stage, at least 70% of a room's portions score 5–8.
+4. `mechanics` and `new` must equal `src/gameplay/RoomRules.ts`. Run the test and copy the values from the failure diff.
+5. Score each portion with the five-axis rubric (precision, chain, mix, hazard, clock & cost) and tell the user the axis scores of the hardest portions.
+
+Also: one idea per room; teach, test, twist, finale; rests after hard beats; use the height; no more than ~8 empty tiles in a row; far-from-spawn portions stay out of peaks.

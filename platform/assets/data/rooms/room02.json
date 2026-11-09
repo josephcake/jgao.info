@@ -1,0 +1,108 @@
+{
+  "id": "room02",
+  "name": "GAP YEAR",
+  "tagline": "the floor is a suggestion",
+  "width": 96,
+  "height": 20,
+  "bg": "hall",
+  "spawn": [
+    4,
+    14
+  ],
+  "exit": [
+    94,
+    10,
+    2,
+    5
+  ],
+  "solids": [
+    [
+      0,
+      0,
+      2,
+      20
+    ],
+    [
+      2,
+      15,
+      10,
+      5
+    ],
+    [
+      38,
+      14,
+      4,
+      6
+    ],
+    [
+      64,
+      13,
+      4,
+      7
+    ],
+    [
+      86,
+      15,
+      10,
+      5
+    ]
+  ],
+  "oneway": [],
+  "spikes": [],
+  "neon": [],
+  "true": [],
+  "entities": [
+    {
+      "type": "terminal",
+      "x": 5,
+      "y": 14,
+      "text": "BLUE PORTS ARE ANCHORS. HOLD {jack} TO SWING.\n{left}/{right} PUMPS. {up}/{down} REELS. LET GO AT THE TOP.\nMOMENTUM IS THE ONLY CURRENCY HERE."
+    },
+    {
+      "type": "anchor",
+      "x": 17,
+      "y": 7
+    },
+    {
+      "type": "anchor",
+      "x": 25,
+      "y": 6
+    },
+    {
+      "type": "anchor",
+      "x": 33,
+      "y": 7
+    },
+    {
+      "type": "terminal",
+      "x": 39,
+      "y": 13,
+      "text": "REST STOP. NO WIFI. OBVIOUSLY."
+    },
+    {
+      "type": "anchor",
+      "x": 46,
+      "y": 6
+    },
+    {
+      "type": "anchor",
+      "x": 54,
+      "y": 5
+    },
+    {
+      "type": "pull",
+      "x": 61,
+      "y": 8
+    },
+    {
+      "type": "anchor",
+      "x": 72,
+      "y": 6
+    },
+    {
+      "type": "anchor",
+      "x": 80,
+      "y": 7
+    }
+  ]
+}

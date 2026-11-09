@@ -1,0 +1,67 @@
+{
+  "tile": 40,
+  "step": 0.008333333,
+  "player": {
+    "width": 22,
+    "height": 42,
+    "runSpeed": 340,
+    "groundAccel": 3600,
+    "groundFriction": 4200,
+    "airAccel": 2400,
+    "airFriction": 900,
+    "gravity": 2100,
+    "maxFall": 950,
+    "jumpVelocity": 780,
+    "jumpCut": 0.45,
+    "apexSpeed": 130,
+    "apexGravity": 0.5,
+    "doubleJumpVelocity": 690,
+    "coyoteTime": 0.1,
+    "jumpBuffer": 0.12,
+    "dashSpeed": 860,
+    "dashTime": 0.15,
+    "dashCooldown": 0.4,
+    "wallSlideSpeed": 150,
+    "wallJumpX": 400,
+    "wallJumpY": 720,
+    "wallJumpLock": 0.14
+  },
+  "cable": {
+    "jackRange": 400,
+    "aim": {
+      "idleLift": 0.45,
+      "idleConeDeg": 80,
+      "sideLift": 0.35,
+      "sideConeDeg": 62,
+      "vertConeDeg": 55,
+      "diagConeDeg": 45
+    },
+    "jackSpeed": 2600,
+    "swingMin": 60,
+    "swingMax": 380,
+    "reelSpeed": 280,
+    "swingPump": 1100,
+    "swingReleaseBoost": 1.12,
+    "maxReleaseSpeed": 1150,
+    "zipSpeed": 1200,
+    "tetherLength": 380,
+    "yankSpeed": 900,
+    "ropeSegments": 22,
+    "swingReleaseLift": 140
+  },
+  "recalibrate": {
+    "maxEnergy": 5.0,
+    "regen": 1.0,
+    "blendSpeed": 8
+  },
+  "power": {
+    "capacitorChargeTime": 1.2,
+    "capacitorHold": 10.0
+  },
+  "devices": {
+    "gateSpeed": 260,
+    "liftSpeed": 130,
+    "bridgeSpeed": 420,
+    "fanLift": 3400
+  }
+}

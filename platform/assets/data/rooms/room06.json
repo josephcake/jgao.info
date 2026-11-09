@@ -1,0 +1,124 @@
+{
+  "id": "room06",
+  "name": "RELAY RACE",
+  "tagline": "twelve seconds of commitment",
+  "width": 80,
+  "height": 20,
+  "bg": "hall",
+  "spawn": [
+    3,
+    14
+  ],
+  "exit": [
+    78,
+    10,
+    2,
+    5
+  ],
+  "solids": [
+    [
+      0,
+      0,
+      2,
+      20
+    ],
+    [
+      2,
+      15,
+      14,
+      5
+    ],
+    [
+      60,
+      15,
+      20,
+      5
+    ],
+    [
+      65,
+      0,
+      3,
+      10
+    ]
+  ],
+  "oneway": [],
+  "spikes": [],
+  "neon": [
+    [
+      33,
+      12,
+      6,
+      1
+    ]
+  ],
+  "true": [
+    [
+      41,
+      12,
+      4,
+      1
+    ]
+  ],
+  "entities": [
+    {
+      "type": "terminal",
+      "x": 4,
+      "y": 14,
+      "text": "CHARGE. RECALL. RUN.\nTHE GATE ON THE FAR SIDE HAS COMMITMENT\nISSUES: ABOUT TWELVE SECONDS' WORTH."
+    },
+    {
+      "type": "source",
+      "id": "s1",
+      "x": 5,
+      "y": 12
+    },
+    {
+      "type": "capacitor",
+      "id": "b1",
+      "x": 10,
+      "y": 12,
+      "hold": 12
+    },
+    {
+      "type": "terminal",
+      "x": 13,
+      "y": 14,
+      "text": "SOME PLATFORMS ARE ONLY REAL TO YOU.\nSOME ARE ONLY REAL TO THEM. BE BOTH.\n(HOLD {recal} MID-AIR. LET GO MID-AIR.)"
+    },
+    {
+      "type": "anchor",
+      "x": 20,
+      "y": 7
+    },
+    {
+      "type": "anchor",
+      "x": 28,
+      "y": 6
+    },
+    {
+      "type": "anchor",
+      "x": 51,
+      "y": 6
+    },
+    {
+      "type": "pull",
+      "x": 58,
+      "y": 8
+    },
+    {
+      "type": "gate",
+      "x": 66,
+      "y": 10,
+      "h": 5,
+      "inputs": [
+        "b1"
+      ]
+    },
+    {
+      "type": "terminal",
+      "x": 71,
+      "y": 14,
+      "text": "LATENCY: ACCEPTABLE."
+    }
+  ]
+}
